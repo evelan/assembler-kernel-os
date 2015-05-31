@@ -1,0 +1,23 @@
+tekst_x		DB 'Oblsuga wyjatku'
+atryb	 	  DB 02h
+
+tekst_0 	DB 'Dzielenie przez zero!'
+atryb_0		DB 02h
+
+tekst_1		DB 'Przykladowe przerwanie'
+atryb_1 	DB 02h
+
+tekst_2		DB 'Aktywne zadanie numer 1'
+atryb_2 	DB 02h
+
+tekst_3		DB 'Aktywne zadanie numer 2'
+atryb_3 	DB 02h
+
+tekst_10 	DB 'Bledny segment TSS'
+atryb_10 	DB 02h
+
+tekst_11 	DB 'zegar systemowy'
+atryb_11 	DB 02h
+
+tekst13 	DB 'Ogolne naruszenie mechanizmu ochrony'
+atryb13 	DB 02h

@@ -1,0 +1,66 @@
+;Makro ustala, czy wyj¹tek zosta³ wygenerowany w trakcie wykonywania
+;siê programu w trybie wirtualnym:
+CZY_POTRZEBNY_MONITOR MACRO
+  MOV EBX, ESP                                    			
+;Odczyt elementów znajduj¹cych siê na stosie a¿ do eflags w³¹cznie:
+  POP EAX                                         		
+  POP EAX                                         		
+  POP EAX                                         		
+  MOV ESP, EBX                                    		 
+  AND EAX,    00000000000000100000000000000000B   ;Je¿eli ustawiony jest
+;bit nr 17, oznacza to, ¿e nale¿y wywo³aæ wirtualny monitor. 
+  CMP EAX, 0                                      		
+ENDM
+;Makro wypisuj¹ce tekst wskazywany par¹ rejestrów ds:bx w obszar pamiêci trybu tekstowego 
+;o przesuniêciu okreœlonym rejestrem di. Makro korzysta ze sposobu adresacji trybu chronionego.
+PM_WYPISZ_TEKST MACRO
+LOCAL WYPISZ_TEKST_, NAPOTKANY_KONIEC_TEKSTU
+;Za³adowanie rejestru es selektorem segmentu pamiêci ekranu:
+  MOV AX, 20H                            
+  MOV ES, AX                                              		
+;Poni¿sza pêtla wyprowadza na ekran kolejne znaki ci¹gu tekstowego a¿ do napotkania bajtu zerowego:
+  WYPISZ_TEKST_:
+    MOV AL, [DS:BX]                                			
+    CMP AL, 0                                      			
+    JE NAPOTKANY_KONIEC_TEKSTU                     			
+    MOV [ES:DI], AL                                			
+    INC DI                                         			
+    INC DI                                         			
+    INC BX                                         			
+    JMP WYPISZ_TEKST_                                 			
+  NAPOTKANY_KONIEC_TEKSTU:
+ENDM
+;Poni¿sze makro wypisuje tekst spod adresu okreœlonego par¹ rejestrów cs:si do pamiêci trybu tekstowego 
+;o przesuniêciu okreœlonym rejetrem di. Makro stosuje typ adresacji trybu real.
+REAL_WYPISZ_TEKST MACRO
+  LOCAL REAL_PETLA, REAL_KONIEC_PETLI
+;Rejestr segmentowy ³adowany 16 starszymi bitami adresu pamiêci trybu tekstowego:
+  MOV AX, 0B800H                                   			
+  MOV ES, AX                                       			
+;Poni¿sza pêtla wyprowadza na ekran kolejne znaki ³añcucha wskazywanego rejestrami
+;cs:si a¿ do napotkania bajtu zerowego:
+  REAL_PETLA:
+    MOV AL, [CS:SI]                           				
+    CMP AL, 0                                 				
+    JE REAL_KONIEC_PETLI                      				
+    MOV [ES:DI], AL                           				
+    INC DI                                    				
+    INC DI                                    				
+    INC SI                                    				
+    JMP REAL_PETLA                              				
+  REAL_KONIEC_PETLI:
+ENDM
+;Makro zawieraj¹ce instrukcjê mov eax, cr4 zapisan¹ w kodzie maszynowym:
+MOV_EAX_CR4   MACRO
+  DB 0FH                                                      	
+  DB 20H                                                      	
+  DB 0E0H                                                     	
+ENDM
+;Makro zawieraj¹ce instrukcjê mov cr4, eax zapisan¹ w kodzie maszynowym:
+MOV_CR4_EAX 	MACRO
+  DB 0FH                                                     
+  DB 22H                                                       
+  DB 0E0H                                                     	
+ENDM
+
+

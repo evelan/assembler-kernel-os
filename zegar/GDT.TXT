@@ -1,0 +1,6 @@
+	GDT_NULL 		DESKR <0,0,0,0,0,0>                     ;0
+	GDT_DANE 		DESKR <DANE_SIZE-1,0,0,92H,0,0>   	;8
+	GDT_PROGRAM 		DESKR <PROGRAM_SIZE-1,0,0,98H,0,0> 	;16
+	GDT_STOS 		DESKR <255,0,0,92H,0,0>         	;24
+	GDT_EKRAN 		DESKR <4095,8000H,0BH,92H,0,0>        	;32
+

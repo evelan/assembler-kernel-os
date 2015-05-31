@@ -33,41 +33,9 @@ petla1: MOV ES:[SI+1000],AL
 exc_1   ENDP
 
 exc_2   PROC
-
-MOV AX,32
-  MOV ES,AX
-  MOV BX,OFFSET tekst_2 ;aktywne zadanie numer 1 (23)
-  MOV CX,23
-  MOV AL,[BX]
-	MOV SI,0
-petla2:
-  MOV ES:[SI+160],AL
-	MOV AL,atryb_2
-	MOV ES:[SI+161],AL
-  ADD BX,1
-	ADD SI,2
-  MOV AL,[BX]
-  LOOP petla2
-	IRETD
-
 exc_2   ENDP
 
 exc_3   PROC
-MOV AX,32
-  MOV ES,AX
-  MOV BX,OFFSET tekst_3 ;aktywne zadanie numer 2 (23)
-  MOV CX,23
-  MOV AL,[BX]
-	MOV SI,0
-petla3:
-  MOV ES:[SI+160],AL
-	MOV AL,atryb_3
-	MOV ES:[SI+161],AL
-  ADD BX,1
-	ADD SI,2
-  MOV AL,[BX]
-  LOOP petla3
-	IRETD
 exc_3   ENDP
 
 exc_4   PROC

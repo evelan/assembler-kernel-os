@@ -1,0 +1,27 @@
+;Tablica deskryptorów przerwañ:
+IFNDEF IDT
+IDT	LABEL WORD		;Pocz¹tek IDT
+  TRAP 	32 	DUP(<EXC_>)
+  INTR  <PRZERWANIE0>
+  INTR  <PRZERWANIE1>
+IDT_SIZE=$-IDT			;Rozmiar tablicy IDT
+ENDIF
+;Deklaracja kolejki zadañ:
+KOLEJKA_ZADAN KOLEJKA_ZADAN_ <>
+PDESKR		DQ 0		;Pseudodeskryptor
+ORG_IDT		DQ 0
+TEKST		DB 'OBS£UGA WYJATKU'
+ATRYB	 	DB 1EH
+INFO		DB 'POWROT Z TRYBU CHRONIONEGO $'
+INFO1		DB 'PRZELACZENIE W TRYB PROTECTED $'
+TSS_0		DB 104   DUP(0)	;Segment stanu zadania 0 (proc. main).
+TSSY_ZADAN    	DB 104*9 DUP(0) ;Tablica w której bêd¹ umieszczane segmenty TSS
+                               	;tworzonych zadañ.
+LICZNIK_TYKOW 	DB 0        	;Zmienna przechowuj¹ca wartoœæ inkrementowan¹ przez
+                            	;procedurê przerwania zegarowego.
+CZY_MOZNA_KONCZYC DB 0         	;Wartoœæ 1 oznacza gotowoœæ do zakoñczenia programu.
+PULA_DYNAMICZNA   DB 62 DUP (0) ;Tablica, z której bêd¹ pobierane dynamicznie elementy - 
+                                   ;(obszar sterty)
+LICZNIK_ZADAN 	DB 0            ;Liczba wywo³anych zadañ.
+INT_ON       	DB 0         	;Gdy 1 oznacza, ¿e wielozadaniowoœæ zosta³a aktywowana -
+

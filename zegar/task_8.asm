@@ -1,0 +1,318 @@
+.386P
+INCLUDE STRUKT.TXT
+DANE    SEGMENT USE16			;Segment danych zadania nr 0
+;Tablica deskryptorów globalnych GDT
+	GDT_NULL 	DESKR <0,0,0,0,0,0>
+	GDT_DANE 	DESKR <DANE_SIZE-1,0,0,92H,0,0>		;8
+	GDT_PROGRAM 	DESKR <PROGRAM_SIZE-1,0,0,9AH,0,0>	;16
+	GDT_STOS 	DESKR <255,0,0,92H,0,0>			;24
+	GDT_EKRAN 	DESKR <4095,8000H,0BH,92H,0,0>		;32
+	GDT_TSS_0	DESKR <103,0,0,89H,0,0>			;40
+	GDT_TSS_1	DESKR <103,0,0,89H,0,0>			;48
+	GDT_TSS_2	DESKR <103,0,0,89H,0,0>			;56
+	GDT_LDT_1	DESKR <LDT_1_SIZE-1,,,82H>		;64
+	GDT_LDT_2	DESKR <LDT_2_SIZE-1,,,82H>		;72
+	GDT_SIZE = $ - GDT_NULL 
+;Tablica deskryptorów przerwañ IDT
+	IDT	LABEL WORD
+	INCLUDE PM_IDT.TXT
+	IDT_0	INTR <PROC_0>
+	IDT_1	INTR <PROC_1>
+	IDT_SIZE = $ - IDT
+;Pierwsza lokalna tablica deskryptorów
+	LDT_1	LABEL WORD
+	LDT_DANE_1 		DESKR <DANE_1_SIZE-1,,,92H>	;4 segment DANE_1
+	LDT_PROGRAM_1 		DESKR <PROGRAM_1_SIZE-1,,,98H>  ;12 segment PROGRAM_1
+	LDT_STOS_1		DESKR <255,,,92H>		;20 segment STOS_1
+	LDT_1_SIZE=$-LDT_1
+;Druga lokalna tablica deskryptorów
+	LDT_2	LABEL WORD
+	LDT_DANE_2 		DESKR <DANE_2_SIZE-1,,,92H>	;4 segment DANE_2
+	LDT_PROGRAM_2 		DESKR <PROGRAM_2_SIZE-1,,,98H> ;12 segment PROGRAM_2
+	LDT_STOS_2		DESKR <255,,,92H>		;20 segment STOS_2
+	LDT_2_SIZE=$-LDT_2
+	PDESKR	DQ 	0
+	ORG_IDT	DQ	0
+	TEKST	DB 'TRYB CHRONIONY'
+	TEKST1	DB 'PRZERWANIE'
+   	INCLUDE PM_DATA.TXT
+	INFO	DB 'POWROT Z TRYBU CHRONIONEGO $'
+	TSS_0	DB 104 DUP (0)
+	TSS_1	DB 104 DUP (0)
+	TSS_2	DB 104 DUP (0)
+	INF_0	DB 'PROGRAM GLOWNY'
+DANE_SIZE=$-GDT_NULL
+DANE	ENDS
+
+PROGRAM SEGMENT 'CODE' USE16		;Segment programu zadania nr 0
+        ASSUME CS:PROGRAM, DS:DANE, SS:STK
+POCZ	LABEL WORD
+INCLUDE PM_EXC.TXT
+INCLUDE MAKRA.TXT
+PROC_0	PROC
+PROC_0	ENDP
+;Procedura obs³ugi przerwania od klawiatury (przerwanie nr 1)
+PROC_1	PROC
+	PUSH AX
+	PUSH DX
+	IN AL,60H	;Pobranie kodu klawisza
+	MOV DL,AL
+	IN AL,61H	;Potwierdzenie pobrania numeru klawisza
+	OR AL,80H
+	OUT 61H,AL
+	AND AL,7FH
+	OUT 61H,AL
+	MOV AL,20H	;Sygna³ koñca obs³ugi przerwania
+	OUT 20H,AL
+	CMP DL,0BH	;Klawisz '0'
+	JE TSK0
+	CMP DL,2	;Klawisz '1'
+	JE TSK1
+	CMP DL,3	;Klawisz '2'
+	JE TSK2
+	JMP OUT1
+   TSK0:	STR AX
+	CMP AX,40
+	JE OUT1
+	POP DX
+	POP AX
+	JMP DWORD PTR CS:t0_addr 	;Prze³¹czenie zadania na zadanie 
+  					;nr 0 (program g³ówny)
+	JMP OUT_P1
+   TSK1:	STR AX
+	CMP AX,48
+	JE OUT1
+	POP DX
+	POP AX
+	JMP DWORD PTR CS:T1_ADDR	;Prze³¹czenie zadania na zadanie nr 1
+	JMP OUT_P1
+   TSK2:	STR AX
+	CMP AX,56
+	JE OUT1
+	POP DX
+	POP AX
+	JMP DWORD PTR CS:T2_ADDR	;Prze³¹czenie zadania na zadanie nr 2
+   OUT_P1:	IRETD
+   OUT1:	POP DX
+	POP AX
+	JMP OUT_P1
+   T0_ADDR	DW 0,40
+   T1_ADDR	DW 0,48
+   T2_ADDR	DW 0,56
+PROC_1	ENDP
+
+START:	
+	INICJOWANIE_DESKRYPTOROW
+	PM_TSS0_I_TSS1 TSS_0,TSS_1,GDT_TSS_0,GDT_TSS_1
+	XOR EAX,EAX				;Wpis do deskryptora adresu bazowego
+	MOV AX,OFFSET TSS_2			;segmentu stanu zadania nr 2
+	ADD EAX,EBP
+	MOV BX,OFFSET GDT_TSS_2
+	MOV [BX].BASE_1,AX
+	ROL EAX,16
+	MOV [BX].BASE_M,AL
+;	MOV EAX,EBP
+	XOR EAX,EAX				;Wpis do deskryptora adresu bazowego
+	MOV AX,OFFSET LDT_1			;lokalnej tablicy deskryptorów 
+	ADD EAX,EBP				;zadania nr 1
+	MOV BX,OFFSET GDT_LDT_1
+	MOV [BX].BASE_1,AX
+	ROL EAX,16
+	MOV [BX].BASE_M,AL
+;	MOV EAX,EBP
+	XOR EAX,EAX				;Wpis do deskryptora adresu bazowego
+	MOV AX,OFFSET LDT_2			;lokalnej tablicy deskryptorów
+	ADD EAX,EBP				;zadania nr 2
+	MOV BX,OFFSET GDT_LDT_2
+	MOV [BX].BASE_1,AX
+	ROL EAX,16
+	MOV [BX].BASE_M,AL
+	XOR EAX,EAX				;Wpis do deskryptora adresu bazowego
+	MOV AX,SEG DANE_1			;segmentu danych zadania nr 1
+	SHL EAX,4
+	MOV BX,OFFSET LDT_DANE_1
+	MOV [BX].BASE_1,AX
+	ROL EAX,16
+	MOV [BX].BASE_M,AL
+	XOR EAX,EAX				;Wpis do deskryptora adresu bazowego
+	MOV AX,SEG PROGRAM_1			;segmentu programu zadania nr 1
+	SHL EAX,4
+	MOV BX,OFFSET LDT_PROGRAM_1
+	MOV [BX].BASE_1,AX
+	ROL EAX,16
+	MOV [BX].BASE_M,AL
+	XOR EAX,EAX				;Wpis do deskryptora adresu bazowego
+	MOV AX,SEG STOS_1			;segmentu stosu zadania nr 1
+	SHL EAX,4
+	MOV BX,OFFSET LDT_STOS_1
+	MOV [BX].BASE_1,AX
+	ROL EAX,16
+	MOV [BX].BASE_M,AL
+	XOR EAX,EAX				;Wpis do deskryptora adresu bazowego
+	MOV AX,SEG DANE_2			;segmentu danych zadania nr 2
+	SHL EAX,4
+	MOV BX,OFFSET LDT_DANE_2
+	MOV [BX].BASE_1,AX
+	ROL EAX,16
+	MOV [BX].BASE_M,AL
+	XOR EAX,EAX				;Wpis do deskryptora adresu bazowego
+	MOV AX,SEG PROGRAM_2			;segmentu programu zadania nr 2
+	SHL EAX,4
+	MOV BX,OFFSET LDT_PROGRAM_2
+	MOV [BX].BASE_1,AX
+	ROL EAX,16
+	MOV [BX].BASE_M,AL
+	XOR EAX,EAX				;Wpis do deskryptora adresu bazowego
+	MOV AX,SEG STOS_2			;segmentu stosu zadania nr 2
+	SHL EAX,4
+	MOV BX,OFFSET LDT_STOS_2
+	MOV [BX].BASE_1,AX
+	ROL EAX,16
+	MOV [BX].BASE_M,AL
+	MOV WORD PTR TSS_1+4CH,12		;Inicjalizacja segmentu stanu
+	MOV WORD PTR TSS_1+20H,0		;zadania nr 1
+	MOV WORD PTR TSS_1+50H,20		
+	MOV WORD PTR TSS_1+38H,256
+	MOV WORD PTR TSS_1+54H,4
+	MOV WORD PTR TSS_1+48H,32
+	STI
+	PUSHFD
+	POP EAX
+	MOV DWORD PTR TSS_1+24H,EAX
+	MOV TSS_1+60H,64
+	MOV WORD PTR TSS_2+4CH,12		;Inicjalizacja segmentu stanu 
+	MOV WORD PTR TSS_2+20H,0		;zadania nr 2
+	MOV WORD PTR TSS_2+50H,20		
+	MOV WORD PTR TSS_2+38H,256
+	MOV WORD PTR TSS_2+54H,4
+	MOV WORD PTR TSS_2+48H,32
+	MOV DWORD PTR TSS_2+24H,EAX
+	MOV TSS_2+60H,72
+	CLI	
+	INICJACJA_IDTR
+	KONTROLER_PRZERWAN_PM 0FDH	
+	AKTYWACJA_PM
+	MOV AX,32
+	MOV ES,AX
+	MOV GS,AX
+	MOV FS,AX
+	MOV AX,40				;Za³adowanie rejestru zadania (TR)
+	LTR AX					;deskryptorem segmentu stanu 
+   WYPISZ_N_ZNAKOW_Z_ATRYBUTEM TEKST,14,680,ATRYB
+	STI					;Program wykonywany w zadaniu nr 0
+   C1:	MOV AH,62h
+	MOV CX,2
+   C2:	PUSH CX
+	MOV DI,1440
+	MOV CX,14
+	MOV SI,OFFSET inf_0
+   C3:	MOV AL,[SI]
+	MOV ES:[DI],AX
+	INC SI
+	ADD DI,2
+	PUSH CX
+	MOV ECX,0ffffffh			;OpóŸnienie
+   C4:	MOV DX,0FFFEH
+	ADD DX,1
+	DB 67H
+	LOOP C4
+	POP CX	
+	LOOP C3
+	POP CX
+	MOV AH,26H
+	LOOP C2
+	JMP C1
+	ETYKIETA_POWROTU_DO_RM:
+	CLI
+	KONTROLER_PRZERWAN_RM
+	MIEKI_POWROT_RM
+	POWROT_DO_RM 0,1
+PROGRAM_SIZE=$-POCZ
+PROGRAM ENDS
+
+STK	SEGMENT STACK 'STACK'		;Segment stosu zadania nr 0
+	DB 256 DUP(0)
+STK	ENDS
+
+DANE_1	SEGMENT USE16			;Segment danych zadania nr 1
+	DANE_1_POCZ=$
+	INF_1 DB '1 ZADANIE NR 1'
+	DANE_1_SIZE=$-DANE_1_POCZ
+DANE_1	ENDS
+
+PROGRAM_1 SEGMENT 'CODE' USE16		;Segment programu zadania nr 1
+	ASSUME CS:PROGRAM_1,DS:DANE_1
+ZADANIE1 PROC
+   A1:	MOV AH,71H
+	MOV CX,2
+   A2:	PUSH CX
+	MOV DI,800
+	MOV CX,14
+	MOV SI,OFFSET INF_1
+   A3:	MOV AL,[SI]
+	MOV ES:[DI],AX
+	INC SI
+	ADD DI,2
+	PUSH CX
+	MOV CX,0FFFFH	;OpóŸnienie
+   A4:	PUSH CX
+	MOV CX,0ffh
+   A5:	LOOP A5
+	POP CX
+	LOOP A4
+	POP CX	
+	LOOP A3
+	POP CX
+	MOV AH,17H
+	LOOP A2
+	JMP A1
+ZADANIE1 ENDP
+PROGRAM_1_SIZE=$-ZADANIE1
+PROGRAM_1 ENDS
+
+STOS_1	SEGMENT 'STACK'			;Segment stosu zadania nr 1
+	DB 256 DUP(0)
+STOS_1	ENDS
+
+
+DANE_2	SEGMENT USE16			;Segment danych zadania nr 2
+	DANE_2_POCZ=$
+	INF_2 DB '2 ZADANIE NR 2'
+	DANE_2_SIZE=$-DANE_2_POCZ
+DANE_2	ENDS
+
+PROGRAM_2 SEGMENT 'CODE' USE16		;Segment programu zadania nr 2
+	ASSUME CS:PROGRAM_2,DS:DANE_2
+ZADANIE2 PROC
+   B1:	MOV AH,34H
+	MOV CX,2
+   B2:	PUSH CX
+	MOV DI,1120
+	MOV CX,14
+	MOV SI,OFFSET INF_2
+   B3:	MOV AL,[SI]
+	MOV ES:[DI],AX
+	INC SI
+	ADD DI,2
+	PUSH CX
+	MOV CX,0FFFFH	;OpóŸnienie
+   B4:	PUSH CX
+	MOV CX,0FFH
+   B5:	LOOP B5
+	POP CX
+	LOOP B4
+	POP CX	
+	LOOP B3
+	POP CX
+	MOV AH,17H
+	LOOP B2
+	JMP B1
+ZADANIE2 ENDP
+PROGRAM_2_SIZE=$-ZADANIE2
+PROGRAM_2 ENDS
+
+STOS_2	SEGMENT 'STACK'			;Segment stosu zadania nr 2
+	DB 256 DUP(0)
+STOS_2	ENDS
+END START
+

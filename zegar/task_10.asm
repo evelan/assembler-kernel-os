@@ -1,0 +1,197 @@
+.386P
+INCLUDE STRUKT.TXT
+DANE    SEGMENT USE16			;Segment danych zadania nr 0
+;Tablica deskryptorów globalnych GDT
+	GDT_NULL 		DESKR <0,0,0,0,0,0>
+	GDT_DANE 		DESKR <DANE_SIZE-1,0,0,92H,0,0>		;8
+	GDT_PROGRAM 		DESKR <PROGRAM_SIZE-1,0,0,98H,0,0>	;16
+	GDT_STOS 		DESKR <255,0,0,92H,0,0>			;24
+	GDT_EKRAN 		DESKR <4095,8000H,0BH,0F2H,0,0>		;32
+	GDT_TSS_CTRL		DESKR <103,0,0,89H,0,0>			;40
+	GDT_TSS_TASK		DESKR <103,0,0,89H,0,0>			;48
+	GDT_LDT			DESKR <LDT_SIZE-1,,,82H>		;56
+	GDT_SIZE = $ - GDT_NULL 
+;Tablica deskryptorów przerwañ IDT
+	IDT	LABEL WORD
+	INCLUDE PM_IDT.TXT
+;	IDT_0	INTR <PROC_0>
+;	IDT_1	INTR <PROC_1>
+	IDT_SIZE = $ - IDT
+;Lokalna tablica deskryptorów
+	LDT	LABEL WORD
+	LDT_DANE 	DESKR <DANE_TASK_SIZE-1,0,0,0F2H> 	;Selektor 4, DPL=3
+	LDT_PROGRAM 	DESKR <PROGRAM_TASK_SIZE-1,0,0,0FAH>	;Selektor 12+3, DPL=3 
+	LDT_STOS	DESKR <255,0,0,0F2H>			;Selektor 20+3 DPL=3
+	LDT_GATE_1	TRAP <SRV_1,16,5,0ECH>			;Selektor 28+3 Furtka
+;wywo³ania procedury srv_1
+	LDT_SIZE=$-LDT
+	PDESKR	DQ 	0
+	ORG_IDT	DQ	0
+	TEKST	DB 'TRYB CHRONIONY'
+   INCLUDE PM_DATA.TXT
+	INFO	DB 'POWROT Z TRYBU CHRONIONEGO $'
+	TSS_CTRL DB 104 DUP (0)
+	TSS_TASK DB 104 DUP (0)
+	START_TASK DW 0,48
+	INF_CTRL DB 'PROGRAM UZYTKOWY'
+	INF_0	DB 'PROGRAM GLOWNY'
+DANE_SIZE=$-GDT_NULL
+DANE	ENDS
+DANE_TASK SEGMENT			;Segment danych programu u¿ytkowego
+DANE_POCZ=$
+INFO_1	DB 'PROGRAM UZYTKOWY'	
+INFO_2	DB 'WYWOLANIE FUNKCJI SYSTEMOWEJ NR 1'
+D		DB 0			;Pierwsze, czy drugie wywo³anie programu u¿ytkowego
+DANE_TASK_SIZE=$-DANE_POCZ
+DANE_TASK ENDS
+
+PROGRAM SEGMENT 'CODE' USE16 	;Segment programu zadania nr 0
+        ASSUME CS:PROGRAM, DS:DANE,SS:STK
+POCZ	LABEL WORD
+INCLUDE PM_EXC.TXT
+INCLUDE MAKRA.TXT
+PROC_0	PROC
+PROC_0	ENDP
+;Procedura srv_1
+SRV_1	PROC FAR
+	CALL WYSW
+	DB 66H
+	RET 20
+SRV_1	ENDP
+;Procedura wyœwietlaj¹ca na ekranie
+WYSW	PROC 
+	MOV EBP,ESP	;Przes³anie do EBP aktualnego adresu szczytu stosu
+	ADD EBP,10	;EBP wskazuje na parametr nr 5 
+	MOV ESI,[BP]+0	;Odczyt ze stosu parametru nr 5
+	MOV EAX,[BP]+4	;            parametru nr 4
+	MOV DS,AX
+	MOV ECX,[BP]+8	;	parametru nr 3
+	MOV EDI,[BP]+12	;	parametru nr 2
+	MOV EAX,[BP]+16	;	parametru nr 1
+	CLD
+   P1:	LODSB
+	STOSW
+	LOOP P1
+	RET
+WYSW	ENDP
+
+START:	
+	INICJOWANIE_DESKRYPTOROW
+   PM_TSS0_I_TSS1 TSS_CTRL,TSS_TASK,GDT_TSS_CTRL,GDT_TSS_TASK	
+	XOR EAX,EAX			;Wpis do deskryptora adresu bazowego
+	MOV AX,OFFSET LDT		;lokalnej tablicy deskryptorów 
+	ADD EAX,EBP		
+	MOV BX,OFFSET GDT_LDT
+	MOV [BX].BASE_1,AX
+	ROL EAX,16
+	MOV [BX].BASE_M,AL
+	XOR EAX,EAX			;Wpis do deskryptora LTD adresu bazowego
+	MOV AX,SEG DANE_TASK		;segmentu danych 'DANE_TASK'
+	SHL EAX,4			 		
+	MOV BX,OFFSET LDT_DANE
+	MOV [BX].BASE_1,AX
+	ROL EAX,16
+	MOV [BX].BASE_M,AL
+	XOR EAX,EAX			;Wpis do deskryptora LTD adresu bazowego
+	MOV AX,SEG PROGRAM_TASK		;segmentu programu 'PROGRAM_TASK'
+	SHL EAX,4			 		
+	MOV BX,OFFSET LDT_PROGRAM
+	MOV [BX].BASE_1,AX
+	ROL EAX,16
+	MOV [BX].BASE_M,AL
+	XOR EAX,EAX			;Wpis do deskryptora LTD adresu bazowego
+	MOV AX,SEG STOS_TASK		;segmentu stosu 'STOS_TASK'
+	SHL EAX,4			 		
+	MOV BX,OFFSET LDT_STOS
+	MOV [BX].BASE_1,AX
+	ROL EAX,16
+	MOV [BX].BASE_M,AL
+	CLI			
+	INICJACJA_IDTR
+	MOV TSS_CTRL+60H,56	;Inicjalizacja TSS zadania steruj¹cego
+;Inicjalizacja TSS zadania u¿ytkowego
+	MOV TSS_TASK+4CH,15		;CS
+	MOV TSS_TASK+20H,0		;IP
+	MOV TSS_TASK+50H,23		;SS
+	MOV TSS_TASK+38H,255		;SP
+	MOV TSS_TASK+54H,07		;DS
+	MOV TSS_TASK+48H,35		;ES
+	MOV TSS_TASK+60H,56		;LDT
+	MOV TSS_TASK+4,255		;ESP0
+	MOV TSS_TASK+8,24			;SS0
+	AKTYWACJA_PM
+	MOV AX,32
+	MOV ES,AX
+	MOV GS,AX
+	MOV FS,AX
+   WYPISZ_N_ZNAKOW_Z_ATRYBUTEM TEKST,14,680,ATRYB
+   MOV AX,56
+	LLDT AX
+	MOV AX,40			;Za³adowanie rejestru zadania (TR)
+	LTR AX				;deskryptorem segmentu stanu zadania
+	CALL DWORD PTR START_TASK 	;Prze³¹czenie na zadanie u¿ytkowe
+;Powót z zadania u¿ytkowego po wykonaniu rozkazu IRET
+	MOV AX,7
+	MOV FS,AX
+	INC BYTE PTR FS:D		;Zmiana pozycji na ekranie
+	MOV TSS_TASK+20H,0		;Ponowne prze³¹czenie na zadanie u¿ytkowe
+	CALL DWORD PTR START_TASK
+   GO:	
+	ETYKIETA_POWROTU_DO_RM:
+	CLI
+	MIEKI_POWROT_RM
+	POWROT_DO_RM 0,1
+PROGRAM_SIZE=$-POCZ
+PROGRAM ENDS
+
+STK SEGMENT STACK 'STACK'	;Segment stosu zadania nr 0
+	DB 256 DUP(0)
+STK ENDS
+
+PROGRAM_TASK	SEGMENT 'CODE' USE16
+	ASSUME CS:PROGRAM_TASK,DS:DANE_TASK,SS:STOS_TASK
+ZADANIE PROC FAR		;Program u¿ytkowy
+				;wykonywany na 3-cim poziomie
+       				;uprzywilejowania
+	MOV AX,4
+	MOV DS,AX
+   A1:	MOV AH,61H
+	MOV DL,D		;Wyœwietlenie tekstu na ekranie
+	CMP DL,0
+	JE A4
+	MOV DI,2320
+	JMP A5
+   A4:	MOV DI,2240
+   A5:	MOV CX,16
+	MOV SI,OFFSET INFO_1
+	CLD
+   A3:	LODSB
+	STOSW
+	LOOP A3
+	MOV AH,24H
+	PUSH EAX
+	CMP DL,0
+	JE A6
+	MOV AX,2640
+	JMP A7
+   A6:	MOV AX,2560
+   A7:	PUSH EAX
+	MOV AX,33
+	PUSH EAX
+	MOV AX,DS
+	PUSH EAX
+	MOV AX,OFFSET INFO_2
+	PUSH EAX
+	DB 9AH			;Wywo³anie funkcji systemowej nr 1
+	DW 0			;SRV_1
+	DW 31
+	IRETD
+ZADANIE ENDP
+PROGRAM_TASK_SIZE=$-ZADANIE
+PROGRAM_TASK ENDS
+
+STOS_TASK SEGMENT 'STACK'	;Segment stosu programu u¿ytkowego
+	DB 256 DUP(0)
+STOS_TASK ENDS
+END START                   			
+

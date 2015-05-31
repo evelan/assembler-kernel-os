@@ -1,0 +1,90 @@
+USTAL_WIELKOSC_PAMIECI PROC
+;Wyniki:
+;EAX - ca³kowity rozmiar pamiêci
+  MOV AX, LINIOWY
+  MOV FS, AX            	;FS zawiera deskryptor adresu liniowego.
+  MOV ESI, 110000H       	;Minimalna za³o¿ona iloœæ pamiêci.
+  PETLA_PROBKOWANIA:
+    INC ESI          		;Próbkowanie po 1B.
+    MOV AL, 1H          	;Wartoœæ wzorcowa.
+    MOV AH, [FS:ESI]
+    MOV [FS:ESI], AL             
+    MOV AL, 0H           	;Wpisanie innej wartoœci do rejestru, by uzyskaæ inny wynik
+                                ;w przypadku gdy nie mo¿na odczytaæ do tego rejestru
+                                ;komórki pamiêci.
+
+    MOV AL, [FS:ESI]     	;Odczyt bajtu.
+    MOV [FS:ESI], AH
+    CMP AL, 1H          	;Porównanie ze wzorcem.
+    JNE KONIEC_PETLI_USTALANIA_PAMIECI ;Je¿eli siê nie zgadza, to musi to byæ poza pamiêci¹.
+  JMP PETLA_PROBKOWANIA
+  KONIEC_PETLI_USTALANIA_PAMIECI:
+  MOV EAX, ESI    		;Wynik zapisywany jest do EAX. 
+  RET
+USTAL_WIELKOSC_PAMIECI ENDP
+
+DRUKUJ_HEX     PROC
+;Parametry procedury:
+;EAX - liczba do wydrukowania.
+  PUSH ECX
+  PUSH EDI
+  PUSH EDX
+  PUSH EAX
+  MOV DX, ES
+  PUSH EDX
+  MOV DX, LINIOWY           
+  MOV ES, DX           
+  MOV EDI, 0B8000H
+  ADD EDI, 2000         
+  MOV ECX, 8            
+  PETLA_WYPISYWANIA:   
+    MOV EDX, 0FH   
+    ROL EAX, 4     
+    AND EDX, EAX   
+    CMP DL, 9      
+    JA DALEJ1      
+    ADD DL, '0'  
+    JMP KONIEC_DALEJ1 
+    DALEJ1:             
+    SUB DL, 10        
+    ADD DL, 'A'       
+    KONIEC_DALEJ1:      
+    PUSH EAX             
+    MOV [ES:EDI], DL 
+    INC EDI          
+    INC EDI          
+    POP EAX               
+  LOOP PETLA_WYPISYWANIA     
+  POP EDX                       
+  MOV ES, DX                   
+  POP EAX                          
+  POP EDX                          
+  POP EDI                          
+  POP ECX                          
+  RET                             
+DRUKUJ_HEX     ENDP             
+
+WYPISZ_TEKST PROC
+  PUSH EAX
+  MOV AX, ES
+  PUSH EAX
+  MOV AX, LINIOWY
+  MOV ES, AX
+  PUSH EBX
+  WYPISZ_TEKST_:
+    MOV AL, [EBX]
+    CMP AL, 0
+    JE NAPOTKANY_KONIEC_TEKSTU
+    MOV [ES:EDI], AL
+    INC EDI
+    INC EDI
+    INC EBX
+  JMP WYPISZ_TEKST_
+  NAPOTKANY_KONIEC_TEKSTU:
+  POP EBX
+  POP EAX
+  MOV ES, AX
+  POP EAX
+  RET
+WYPISZ_TEKST ENDP
+

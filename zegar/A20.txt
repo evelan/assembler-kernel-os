@@ -1,0 +1,143 @@
+CZY_DOSTEPNY_FAST_A20 MACRO
+LOCAL BRAK, KONIEC_A20
+  MOV AX, REAL16
+  MOV DS, AX
+  MOV AX, 2403H
+  INT 15H
+  JC BRAK_A20
+  CMP AH, 0
+  JNE BRAK_A20
+  TEST BX, 2
+  JZ BRAK_A20
+    MOV FAST_A20, 1
+  JMP KONIEC_A20
+  BRAK_A20:
+    MOV FAST_A20, 0
+  KONIEC_A20:
+ENDM
+
+CZY_A20 MACRO
+PUSH AX
+PUSH BX
+  MOV AL, [0:0]
+  MOV BL, AL
+  NOT BL
+  XCHG BL, [0FFFFH:10H]
+  CMP AL, [0:0]
+  MOV [0FFFFH:10H], BL
+POP BX
+POP AX
+ENDM
+
+A20_ON MACRO
+LOCAL  KONIEC_A20,BRAK_FAST_A20, PETLA1_A20, PETLA2_A20, PETLA3_A20, PETLA4_A20
+;Czy a20 ju¿ aktywne:
+  MOV A20,0
+  CZY_A20
+  JE KONIEC_A20
+  CMP FAST_A20, 1
+  JNE BRAK_FAST_A20
+;Fast a20:
+  MOV A20, 1
+  IN AL, 92H
+  OR AL, 2
+  AND AL, 0FEH
+  OUT 92H, AL
+  CZY_A20
+  JE KONIEC_A20
+  BRAK_FAST_A20:
+;Uaktywnienie a20 poprzez sterownik klawiatury:
+;Oczekiwanie na pusty bufor wejœciowy:
+  XOR AX, AX
+  PETLA1_A20:
+    IN AL, 64H
+    BTR AX, 1
+  JC PETLA1_A20
+;Wys³anie komendy odczytu portu wyjœciowego:
+  MOV AL, 0D0H    		;Rozkaz odczytu portu wyjœciowego.
+  OUT 64H, AL
+  XOR AX, AX
+  PETLA2_A20:
+    IN AL, 64H
+    BTR AX, 0     		;Stan bufora wyjœciowego (0 pusty, 1 dane s¹ jeszcze w buforze).
+  JNC PETLA2_A20
+;Odczyt stanu portu wyjœciowego:
+  XOR AX, AX
+  IN AL, 60H
+  PUSH AX
+  PETLA3_A20:
+    IN AL, 64H
+    BTR AX, 1     		;Oczekiwanie na pusty bufor wejœciowy.
+  JC PETLA3_A20
+;Komenda zapisu do portu wyjœciowego:
+  MOV AL, 0D1H  		;Rozkaz zapisu portu wyjœciowego.
+  OUT 64H, AL
+  PETLA4_A20:
+    XOR AX, AX
+    IN AL, 64H
+    BTR AX, 1    		;Oczekiwanie na pusty bufor wejœciowy.
+  JC PETLA4_A20
+;Zapis portu wyjœciowego:
+  POP AX
+  OR AL, 10B
+  OUT 60H, AL
+  MOV A20, 2
+  CZY_A20
+  JE KONIEC_A20
+; ...
+    JMP $
+  KONIEC_A20:
+ENDM
+
+A20_OFF MACRO
+LOCAL KONIEC_A20, PETLA1_A20, PETLA2_A20, PETLA3_A20, PETLA4_A20, WYLACZ_FAST
+  CMP A20, 0
+  JE KONIEC_A20
+  CMP A20, 1
+  JE WYLACZ_FAST
+;Dezaktywacja a20 poprzez sterownik klawiatury:
+;Oczekiwanie na pusty bufor wejœciowy:
+  XOR AX, AX
+  PETLA1_A20:
+  IN AL, 64H
+  BTR AX, 1
+  JC PETLA1_A20
+;Wys³anie komendy odczytu statusu
+  MOV AL, 0D0H    		;Rozkaz odczytu portu wyjœciowego.
+  OUT 64H, AL
+  XOR AX, AX
+  PETLA2_A20:
+    IN AL, 64H
+    BTR AX, 0     		;Stan bufora wyjœciowego (0 pusty, 1 dane s¹ jeszcze w buforze).
+  JNC PETLA2_A20
+;Odczyt stanu portu wyjœciowego:
+  XOR AX, AX
+  IN AL, 60H
+  PUSH AX
+  PETLA3_A20:
+    IN AL, 64H
+    BTR AX, 1     		;Oczekiwanie na pusty bufor wejœciowy.
+  JC PETLA3_A20
+;Komenda zapisu do portu wyjœciowego:
+  MOV AL, 0D1H  		;Rozkaz zapisu portu wyjœciowego.
+  OUT 64H, AL
+  PETLA4_A20:
+    XOR AX, AX
+    IN AL, 64H
+    BTR AX, 1    		;Oczekiwanie na pusty bufor wejœciowy.
+  JC PETLA4_A20
+;Zapis portu wyjœciowego:
+  POP AX
+  AND AL, 11111101B
+  OUT 60H, AL
+  MOV A20, 2
+  CZY_A20
+  JE KONIEC_A20
+;Wy³¹czenie a20 metod¹ fast a20:
+  WYLACZ_FAST:
+    IN AL, 92H
+    AND AL, 0FCH
+    OUT 92H, AL
+  KONIEC_A20:
+ENDM
+

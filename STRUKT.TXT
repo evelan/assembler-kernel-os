@@ -1,6 +1,6 @@
-;Struktura opisuj¹ca deskryptor segmentu:
+;Struktura opisujaca deskryptor segmentu:
 DESKR	STRUC
-  LIMIT	DW	0
+  LIMIT	  DW	0
   BASE_1	DW 	0
   BASE_M	DB	0
   ATTR_1	DB 	0
@@ -8,29 +8,20 @@ DESKR	STRUC
   BASE_H	DB	0
 DESKR	ENDS
 
-;Struktura opisuj¹ca furtkê pu³apki:
-TRAP 	STRUC
-  OFFS_1	DW	0			  ;Offset procedury obs³ugi (bity 0...15).
-  SEL	    DW	16		  ;Selektor segmentu programu.
-  RSRV	  DB	0		  	;Bajt zarezerwowany.
-  ATTR	  DB	8FH			;Obecnoœæ + furtka pu³apki.
-  OFFS_H	DW	0			  ;Offset procedury obs³ugi (bity 16…31).
-TRAP	ENDS
+;Struktura opisujaca furtke pulapki:
+TRAP STRUC
+  OFFS_1	DW	0	  ;Offset procedury obslugi (bity 0...15).
+  SEL	    DW	16	;Selektor segmentu programu.
+  RSRV	  DB	0		;Bajt zarezerwowany.
+  ATTR	  DB	8FH	;Obecnosc + furtka pulapki.
+  OFFS_H	DW	0	  ;Offset procedury obslugi (bity 16-31).
+TRAP ENDS
 
-;Struktura opisuj¹ca furtkê przerwania:
-INTR	STRUC
-  IOFFS_1   DW 	0
-  ISEL	    DW  16
-  IRSRV	    DB	0
-  IATTR	    DB	8EH
-  IOFFS_H   DW	0
-INTR	ENDS
-
-;Struktura opisuj¹ca furtkê zadania
-TASK	STRUC
-  RSRV1		  DW	0
-  SEL_TSS	  DW	0
-  RSRV2		  DB	0
-  ATTRYB		DB	85H
-  RSRV3		  DW	0
-TASK	ENDS
+;Struktura opisujaca furtke przerwania:
+INTR STRUC
+  IOFFS_1 DW 	0
+  ISEL	  DW 	16
+  IRSRV	  DB	0
+  IATTR	  DB	8EH
+  IOFFS_H DW	0
+INTR ENDS

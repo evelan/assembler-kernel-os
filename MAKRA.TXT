@@ -187,7 +187,7 @@ INICJOWANIE_DESKRYPTOROW MACRO
   LGDT PDESKR			;Za³adowanie rejestru GDTR.  
  ENDM     
 
-TRYB_CHRONIONY MACRO	            				  	
+AKTYWACJA_PM MACRO	            				  	
   SMSW AX		          	;Prze³¹czenie procesora w tryb       		
   OR AX,1		          	;pracy chronionej.		            	
   LMSW AX							           	          		
@@ -215,7 +215,7 @@ POWROT_DO_RM MACRO WYLACZYC_A20,PRZYWROCIC_IDTR
   ENDIF
   STI				            ;Odblokowanie przerwañ.	          	
   MOV AH,9			        ;Wydruk tekstu zapisane w zmiennej INFO. 	          	
-  MOV DX,OFFSET TRYB_RM						           	
+  MOV DX,OFFSET INFO						           	
   INT 21H									
   MOV AX,4C00H			    ;Koniec pracy programu.	            
   INT 21H									            
@@ -316,11 +316,11 @@ KONTROLER_PRZERWAN_PM MACRO MASKA
   INC DX                   						
   MOV AL,20H			;icw2=20h (offset wektora przerwañ)
   OUT DX,AL                						
-  MOV AL,4		  	;icw3=04h (uk³ad master)		
+  MOV AL,4			;icw3=04h (uk³ad master)		
   OUT DX,AL                 						
-  MOV AL,1		  	;icw4=01h (tryb 8086/88)		
+  MOV AL,1			;icw4=01h (tryb 8086/88)		
   OUT DX,AL               							
-  MOV AL, MASKA		;ocw1=0fdh (maska przerwañ - master) 
+  MOV AL, MASKA			;ocw1=0fdh (maska przerwañ - master) 
   OUT DX,AL                       					
   MOV DX,0A1H			;Maska przerwañ – slave		
   MOV AL,0FFH              						

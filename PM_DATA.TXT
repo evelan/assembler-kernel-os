@@ -16,8 +16,5 @@ atryb_3 	DB 02h
 tekst_10 	DB 'Bledny segment TSS'
 atryb_10 	DB 02h
 
-tekst_11 	DB 'zegar systemowy'
-atryb_11 	DB 02h
-
 tekst13 	DB 'Ogolne naruszenie mechanizmu ochrony'
 atryb13 	DB 02h

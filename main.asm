@@ -1,5 +1,5 @@
 .386P
-INCLUDE STRUKT.TXT
+INCLUDE DEFSTR.TXT
 
 DANE SEGMENT USE16
 	GDT_NULL 	  DESKR <0,0,0,0,0,0>                 ;segment 0
@@ -14,53 +14,48 @@ DANE SEGMENT USE16
 	
 ;Tablica deskryptorow przerwan IDT
 	IDT	LABEL WORD
-	INCLUDE   PM_IDT.TXT
-	IDT_0	    INTR <PROC_0>
-	IDT_1	    INTR <PROC_1>
+	INCLUDE           RODZPUL.TXT
+	IDT_0	            INTR <PROC_0>
 	IDT_SIZE = $ - IDT
-	PDESKR	  DQ 	0
-	ORG_IDT	  DQ	0
+	PDESKR	          DQ 	0
+	ORG_IDT	          DQ	0
 	
-	WELCOME   DB 'Architektura komputerow - Jakub Pomykala 209897'  
-	INFO_RM   DB 'Powrot do trybu rzeczywistego' ;(29)
-  INFO	    DB 'POWROT Z TRYBU CHRONIONEGO $'
+	WELCOME           DB 'Architektura komputerow - Jakub Pomykala 209897'  
+  INFO	            DB 'POWROT Z TRYBU CHRONIONEGO $'
 	
-  INCLUDE   PM_DATA.TXT
+	INCLUDE           TXTPUL.TXT
 	
-	T0_ADDR	  DW 0,40  ;adresy zadan wg segmentow powyzej
-	T1_ADDR	  DW 0,48
-	T2_ADDR	  DW 0,56
+	T0_ADDR	          DW 0,40  ;adresy zadan wg segmentow powyzej
+	T1_ADDR	          DW 0,48
+	T2_ADDR	          DW 0,56
 	
-	TSS_0	    DB 104 DUP (0)
-	TSS_1	    DB 104 DUP (0)
-	TSS_2	    DB 104 DUP (0)
+	TSS_0	            DB 104 DUP (0)
+	TSS_1	            DB 104 DUP (0)
+	TSS_2	            DB 104 DUP (0)
 	
-	ZADANIE_1 DB '1'
-	ZADANIE_2 DB '2'
-	PUSTE     DB ' '
-	AKTYWNE_ZADANIE DW 0
-	CZAS      DW 0
+	ZADANIE_1         DB '1'
+	ZADANIE_2         DB '2'
+	PUSTE             DB ' '
+	AKTYWNE_ZADANIE   DW 0
+	CZAS              DW 0
 	
-	POZYCJA_1       DW 320
-	POZYCJA_2       DW 2560
-	POZYCJA         DW 0	
+	POZYCJA_1         DW 320
+	POZYCJA_2         DW 2560
+	POZYCJA           DW 0	
   
 DANE_SIZE= $ - GDT_NULL
 DANE ENDS
 
 PROGRAM	SEGMENT 'CODE' USE16
-        ASSUME CS:PROGRAM, DS:DANE, SS:STK ;informacja dla tasma jakie segmenty s¹ gdzie
+        ASSUME CS:PROGRAM, DS:DANE, SS:STK ;informacja dla TASMa jakie segmenty s¹ w których rejestrach segmentowych
 POCZ LABEL WORD
 
-INCLUDE PM_EXC.TXT
-INCLUDE MAKRA.TXT
+INCLUDE OBSLPUL.TXT
+INCLUDE PODST.TXT
 PROC_0	PROC
 
 	PUSH  AX
 	PUSH  DX
-
-	MOV   AL,20H	;Sygnal konca obslugi przerwania
-	OUT   20H,AL
 
 	CMP   AKTYWNE_ZADANIE,1	    ;czy AKTYWNE_ZADANIE == 1? 
 	JE    ETYKIETA_ZADANIE_1    ;jeœli tak to skaczemy do ETYKIETA_ZADANIE_1
@@ -71,12 +66,12 @@ PROC_0	PROC
 		
   ETYKIETA_ZADANIE_1:
   MOV AKTYWNE_ZADANIE, 0	
-  JMP DWORD PTR T0_ADDR	;jedynki
+  JMP DWORD PTR T0_ADDR	       ;przelaczenie zadania na zadanie nr 1
 	JMP DALEJ
   
   ETYKIETA_ZADANIE_2:
   MOV AKTYWNE_ZADANIE, 1
-  JMP DWORD PTR T2_ADDR	;Przelaczenie zadania na zadanie nr 2
+  JMP DWORD PTR T2_ADDR	       ;przelaczenie zadania na zadanie nr 2
   
   DALEJ:
   POP   DX
@@ -85,18 +80,11 @@ PROC_0	PROC
 
 PROC_0	ENDP
 
-;Procedura obslugi przerwania od klawiatury (przerwanie nr 1)
-PROC_1	PROC
-	
-	IRETD
-PROC_1	ENDP
-
 START:	
-	INICJOWANIE_DESKRYPTOROW
+	WPISZ_DESKRYPTORY
 	
-	;wywolowanie z MAKRA.TXT PM_TASKS
   PM_TASKS TSS_0,TSS_1,GDT_TSS_0,GDT_TSS_1
-	XOR   EAX, EAX         ;czyszczenie smieci 
+	XOR   EAX, EAX                
 	MOV   AX, OFFSET TSS_2
 	ADD   EAX, EBP
 	MOV   BX, OFFSET GDT_TSS_2
@@ -104,38 +92,34 @@ START:
 	ROL   EAX, 16
 	MOV   [BX].BASE_M, AL
 	
-	;zadanie 1 ze stosem 512
-	MOV WORD PTR TSS_1+4CH, 16              ;segment programu zadania CS  (SEGMENT PROGRAMU)
-	MOV WORD PTR TSS_1+20H, OFFSET ZADANIE1 ;adres powrotu IP             (SEGMENT 
-	MOV WORD PTR TSS_1+50H, 24              ; SS                          (SEGMENT STOSU)
-	MOV WORD PTR TSS_1+38H, 256             ; StackPointer                (SEGMENT wielkosc stosu)
-	MOV WORD PTR TSS_1+54H, 8               ; ogólny segment danych DS    (SEGMENT DANYCH)
-	MOV WORD PTR TSS_1+48H, 32              ; pamiec ekranu ES            (SEGMENT EKRANU)
-	
-	;bez wykorzystywania lokalnej tablicy deskryptorow
-	;jesli lokalna to musze ja wpisac pod 60h
+	;zadanie 1 ze stosem 256
+	MOV WORD PTR TSS_1+4CH, 16              ;CS (SEGMENT PROGRAMU)
+	MOV WORD PTR TSS_1+20H, OFFSET ZADANIE1 ;IP (SEGMENT adresu powrotu)
+	MOV WORD PTR TSS_1+50H, 24              ;SS (SEGMENT STOSU)
+	MOV WORD PTR TSS_1+38H, 256             ;SP (SEGMENT wielkosc stosu)
+	MOV WORD PTR TSS_1+54H, 8               ;DS (SEGMENT DANYCH)
+	MOV WORD PTR TSS_1+48H, 32              ;ES (SEGMENT EKRANU)
 	
 	STI		                  ;ustawienie znacznika zestawienia na przerwanie
 	PUSHFD		              ;przeslanie znacznikow na szczyt stosu, przepisanie rejestru eflags do eax
 	POP EAX
 	
-	MOV DWORD PTR TSS_1+24H, EAX ;eeflags 
-	;28h - 47h - adresy wszystkich rejestrow roboczych 
+	MOV DWORD PTR TSS_1+24H, EAX            ;zapisujemy eeflags 
 	
-	;zadanie 2 ze stostem 512
-	MOV WORD PTR TSS_2+4CH, 16		
-	MOV WORD PTR TSS_2+20H, OFFSET ZADANIE2
-	MOV WORD PTR TSS_2+50H, 24		
-	MOV WORD PTR TSS_2+38H, 256
-	MOV WORD PTR TSS_2+54H, 8
-	MOV WORD PTR TSS_2+48H, 32
+	;zadanie 2 ze stostem 256
+	MOV WORD PTR TSS_2+4CH, 16		          ;CS (SEGMENT PROGRAMU)
+	MOV WORD PTR TSS_2+20H, OFFSET ZADANIE2 ;IP (SEGMENT adresu powrotu)
+	MOV WORD PTR TSS_2+50H, 24		          ;SS (SEGMENT STOSU)
+	MOV WORD PTR TSS_2+38H, 256             ;SP (SEGMENT wielkosc stosu)
+	MOV WORD PTR TSS_2+54H, 8               ;DS (SEGMENT DANYCH)
+	MOV WORD PTR TSS_2+48H, 32              ;ES (SEGMENT EKRANU)
 	
 	MOV DWORD PTR TSS_2+24H, EAX
 
-	CLI
-	INICJACJA_IDTR
-	KONTROLER_PRZERWAN_PM 0FEH
-	AKTYWACJA_PM
+	CLI                                     ;blokujemy przerwania
+	WPISZ_IDTR                              ;zapisujemy tablicê deskryptorów przerwañ 
+	KONTROLER_PRZERWAN 0FEH                 ;konfigurujemy kontroler przerwañ do obs³ugi czasomierza
+	TRYB_CHRONIONY                          ;przechodzimy w tryb chroniony
 	
 	MOV AX, 32
 	MOV ES, AX
@@ -144,39 +128,47 @@ START:
 	MOV AX, 40		;Zaladowanie rejestru zadania (TR)
 	LTR AX				;deskryptorem segmentu stanu 
 
-  ;czyszczenie ekranu
   CZYSC_EKRAN
   OPOZNIENIE 100
-  
   WYPISZ WELCOME,47,30,ATRYB
   
-  STI ; zezwalamy na przerwania
-    
-			                                    
-
+  STI         ;zezwalamy na przerwania
+  
+;zadanie ktore wypisuje jedynki na ekranie                              
 ZADANIE1 PROC
-;wypisywanie jedynek i wyjatek dzielenia przez zero
 ZADANIE_1_PETLA:
   MOV AL, ZADANIE_1
 	MOV BX, POZYCJA_1
 	MOV AH, 02h	
-	MOV ES:[BX],AX
+	MOV ES:[BX], AX
 	
-	OPOZNIENIE 50
- 	
+	INT 2                       ;wywolanie przerwania z informacj¹ o aktualnym zadaniu 
+	OPOZNIENIE 200
+
  	ADD POZYCJA_1, 2
+  
+	MOV   AL, 20H	              ;sygnal konca obslugi przerwania
+	OUT   20H, AL
 
 	JMP ZADANIE_1_PETLA	
 ZADANIE1 ENDP
 
+;zadanie ktore wypisuje dwojki na ekranie
 ZADANIE2 PROC
 ZADANIE_2_PETLA:
-  MOV AL, ZADANIE_2
+  MOV AL, ZADANIE_2         
 	MOV BX, POZYCJA_2
 	MOV AH, 02h
-	MOV ES:[BX],AX
-	OPOZNIENIE 50
+	MOV ES:[BX], AX
+	
+	INT 3                       ;wywolanie przerwania z informacj¹ o aktualnym zadaniu 
+	OPOZNIENIE 300
+	
  	ADD POZYCJA_2, 2	
+ 	  
+	MOV   AL, 20H	              ;sygnal konca obslugi przerwania
+	OUT   20H, AL
+ 	
 	JMP ZADANIE_2_PETLA
 ZADANIE2 ENDP
 

@@ -153,7 +153,7 @@ LOCAL KONIEC_A20, PETLA1_A20, PETLA2_A20, PETLA3_A20, PETLA4_A20, WYLACZ_FAST
   KONIEC_A20:
 ENDM
 
-INICJOWANIE_DESKRYPTOROW MACRO
+WPISZ_DESKRYPTORY MACRO
   MOV AX,DANE										
   MOV DS,AX										
   MOV DL,0			;20-bitowy adres bazowy segmentu danych.	
@@ -187,7 +187,7 @@ INICJOWANIE_DESKRYPTOROW MACRO
   LGDT PDESKR			;Za³adowanie rejestru GDTR.  
  ENDM     
 
-AKTYWACJA_PM MACRO	            				  	
+TRYB_CHRONIONY MACRO	            				  	
   SMSW AX		          	;Prze³¹czenie procesora w tryb       		
   OR AX,1		          	;pracy chronionej.		            	
   LMSW AX							           	          		
@@ -221,7 +221,7 @@ TRYB_RZECZYWISTY MACRO WYLACZYC_A20,PRZYWROCIC_IDTR
   INT 21H									            
 ENDM
 
-KONTROLER_PRZERWAN_PM MACRO MASKA
+KONTROLER_PRZERWAN MACRO MASKA
 ;PROGRAMOWANIE KONTROLERA PRZERWAÑ
   MOV DX,20H			;Inicjacja pracy uk³adu  		
   MOV AL,11H			;icw1=11h       			
@@ -229,18 +229,18 @@ KONTROLER_PRZERWAN_PM MACRO MASKA
   INC DX                   						
   MOV AL,20H			;icw2=20h (offset wektora przerwañ)
   OUT DX,AL                						
-  MOV AL,4			;icw3=04h (uk³ad master)		
+  MOV AL,4		  	;icw3=04h (uk³ad master)		
   OUT DX,AL                 						
-  MOV AL,1			;icw4=01h (tryb 8086/88)		
+  MOV AL,1		  	;icw4=01h (tryb 8086/88)		
   OUT DX,AL               							
-  MOV AL, MASKA			;ocw1=0fdh (maska przerwañ - master) 
+  MOV AL, MASKA		;ocw1=0fdh (maska przerwañ - master) 
   OUT DX,AL                       					
   MOV DX,0A1H			;Maska przerwañ – slave		
   MOV AL,0FFH              						
   OUT DX,AL                						
 ENDM
 
-INICJACJA_IDTR MACRO
+WPISZ_IDTR MACRO
   MOV WORD PTR PDESKR,IDT_SIZE-1
   XOR EAX,EAX
   MOV AX,OFFSET IDT

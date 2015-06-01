@@ -1,10 +1,10 @@
-;Struktura opisujaca deskryptor segmentu:
+;struktura opisujaca deskryptor segmentu
 DESKR	STRUC
-  LIMIT	  DW	0
-  BASE_1	DW 	0
+  LIMIT	  DW	0   ;rozmiar
+  BASE_1	DW 	0   ;
   BASE_M	DB	0
-  ATTR_1	DB 	0
-  ATTR_2	DB	0
+  ATTR_1	DB 	0   ;atrybuty 
+  ATTR_2	DB	0   ;atrybuty 
   BASE_H	DB	0
 DESKR	ENDS
 

@@ -62,24 +62,23 @@ PROC_0	PROC
 	MOV   AL,20H	;Sygnal konca obslugi przerwania
 	OUT   20H,AL
 
+	CMP   AKTYWNE_ZADANIE,1	    ;czy AKTYWNE_ZADANIE == 1? 
+	JE    ETYKIETA_ZADANIE_1    ;jeœli tak to skaczemy do ETYKIETA_ZADANIE_1
 	
-	CMP   AKTYWNE_ZADANIE,1	    ;wcisniecie klawisza '1' na klawiaturze -> zadanie nr i wypisywanie jedynek
-	JE    TSK0
-	
-	CMP   AKTYWNE_ZADANIE,0	    ;wcisniecie klawisza '2' -> zadanie nr 2 i wypisywanie dwojek
-	JE    TSK2
-	JMP   OUT_P1
+	CMP   AKTYWNE_ZADANIE,0	    ;czy AKTYWNE_ZADANIE == 0?
+	JE    ETYKIETA_ZADANIE_2    ;jeœli tak to skaczemy do ETYKIETA_ZADANIE_2
+	JMP   DALEJ
 		
-  TSK0:
+  ETYKIETA_ZADANIE_1:
   MOV AKTYWNE_ZADANIE, 0	
   JMP DWORD PTR T0_ADDR	;jedynki
-	JMP OUT_P1
+	JMP DALEJ
   
-  TSK2:
+  ETYKIETA_ZADANIE_2:
   MOV AKTYWNE_ZADANIE, 1
   JMP DWORD PTR T2_ADDR	;Przelaczenie zadania na zadanie nr 2
   
-  OUT_P1:
+  DALEJ:
   POP   DX
 	POP   AX
 	IRETD
@@ -135,7 +134,7 @@ START:
 
 	CLI
 	INICJACJA_IDTR
-	KONTROLER_PRZERWAN_PM 0FCH
+	KONTROLER_PRZERWAN_PM 0FEH
 	AKTYWACJA_PM
 	
 	MOV AX, 32

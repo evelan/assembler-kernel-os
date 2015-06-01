@@ -2,7 +2,7 @@
  Start  Stop   Length Name               Class
 
  00000H 003BDH 003BEH DANE               
- 003C0H 0078AH 003CBH PROGRAM            CODE
+ 003C0H 00787H 003C8H PROGRAM            CODE
  00790H 00A8FH 00300H STK                STACK
 
 Program entry point at 003C:01D2

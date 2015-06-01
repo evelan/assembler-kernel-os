@@ -201,7 +201,7 @@ AKTYWACJA_PM MACRO
   MOV SS,AX		        	;segmentu stosu.		           		
 ENDM
 
-POWROT_DO_RM MACRO WYLACZYC_A20,PRZYWROCIC_IDTR	
+TRYB_RZECZYWISTY MACRO WYLACZYC_A20,PRZYWROCIC_IDTR	
   RETURN:
   MOV AX,DANE		        ;Procesor pracuje w trybie Real.     	
   MOV DS,AX			        ;Inicjalizacja rejestrów segmentowych.	           	
@@ -221,93 +221,6 @@ POWROT_DO_RM MACRO WYLACZYC_A20,PRZYWROCIC_IDTR
   INT 21H									            
 ENDM
 
-MIEKI_POWROT_RM MACRO
-  MOV EAX, CR0
-  AND EAX, 07FFFFFFFH
-  MOV CR0, EAX
-  MOV EAX, 0
-  MOV CR3, EAX
-  MOV WORD PTR GDT_DANE.LIMIT, 0FFFFH
-  MOV WORD PTR GDT_PROGRAM.LIMIT, 0FFFFH
-  MOV WORD PTR GDT_STOS.LIMIT, 0FFFFH
-  MOV AX, 8
-  MOV DS, AX
-  MOV ES, AX
-  MOV FS, AX
-  MOV GS, AX
-  MOV AX, 24
-  MOV SS, AX
-  DB 0EAH
-  DW OFFSET LADOWANIE_ODP_LIMITU
-  DW 16
-  LADOWANIE_ODP_LIMITU:
-  MOV EAX, CR0
-  AND EAX, 0FFFFFFFEH
-  MOV CR0, EAX
-  DB 0EAH
-  DW OFFSET KONIEC
-  DW PROGRAM
-  KONIEC:
-ENDM
-
-INICJACJA_TSS0 MACRO
-;Okreœlenie adresu liniowego segmentu stanu zadania TSS_0 i zapis do
-;deskryptora GDT_TSS_0 w tablicy GDT
-  XOR EAX,EAX                						
-  MOV AX,OFFSET TSS_0        						
-  ADD EAX,EBP                							
-  MOV BX,OFFSET GDT_TSS_0    						
-  MOV [BX].BASE_1,AX         						
-  ROL EAX,16                 							
-  MOV [BX].BASE_M,AL 
-  MOV AX, 24
-  MOV WORD  PTR TSS_0+50H,   AX	    	
-  MOV DWORD PTR TSS_0+38H,  255 	 
-  MOV WORD  PTR TSS_0+8,     24	 
-  MOV DWORD PTR TSS_0+4,    255	         
-ENDM
-
-INICJACJA_TSS2 MACRO WARTOSC_EFLAGS
-;Okreœlenie adresu liniowego segmentu stanu zadania TSS_2
-  XOR EAX,EAX                							
-  MOV AX,OFFSET TSS_2        						
-  ADD EAX,EBP                							
-  MOV BX,OFFSET GDT_TSS_2    						
-  MOV [BX].BASE_1,AX         						
-  ROL EAX,16                 							
-  MOV [BX].BASE_M,AL   
-;Inicjacja pól segmentu stanu zadania procesu przygotowywanego do uruchomienia w trybie wirtualnym 8086
-  MOV AX, KOD_REAL                 					
-  MOV WORD PTR TSS_2+4CH, AX  	;Selektor segmentu programu (cs)    	 
-  MOV WORD PTR TSS_2+20H, 0   	;Offset w segmencie progr.   	 
-  MOV AX, STK_V86                 						
-  MOV WORD PTR TSS_2+50H,AX	    ;Selektor segmentu stosu (ss).       	
-  MOV DWORD PTR TSS_2+38H, 256 	;Offset w segmencie stosu.      
-  MOV WORD PTR TSS_2+8,64		    ;Selektor segmentu stosu 0 (ss).       
-  MOV DWORD PTR TSS_2+4, 255	  ;Offset w segmencie stosu 0.            	
-;Wartoœæ rejestru EFLAGS:
-  MOV DWORD PTR TSS_2+36, WARTOSC_EFLAGS     
-ENDM
-
-INICJACJA_DESKR_PRZERWAN MACRO
-;Okreœlenie adresu liniowego segmentu zawieraj¹cego procedury obs³ugi wyj¹tków:
-  XOR EAX,EAX
-  MOV AX,PRZERWANIA               						       
-  SHL EAX, 4                     						
-  MOV BX,OFFSET GDT_INT        						
-  MOV [BX].BASE_1,AX            							
-  ROL EAX,16                    							
-  MOV [BX].BASE_M,AL  
-;Za³adowanie idtr
-  MOV WORD PTR PDESKR,IDT_SIZE-1 	
-  XOR EAX,EAX                        		
-  MOV AX,OFFSET IDT                  		
-  ADD EAX,EBP                        		
-  MOV DWORD PTR PDESKR+2,EAX 	
-  SIDT ORG_IDT
-  LIDT PDESKR                        
-ENDM
-
 KONTROLER_PRZERWAN_PM MACRO MASKA
 ;PROGRAMOWANIE KONTROLERA PRZERWAÑ
   MOV DX,20H			;Inicjacja pracy uk³adu  		
@@ -325,24 +238,6 @@ KONTROLER_PRZERWAN_PM MACRO MASKA
   MOV DX,0A1H			;Maska przerwañ – slave		
   MOV AL,0FFH              						
   OUT DX,AL                						
-ENDM
-
-KONTROLER_PRZERWAN_RM MACRO
-  MOV DX,20H			;Inicjacja pracy uk³adu 		
-  MOV AL,11H			;icw1=11h               			
-  OUT DX,AL                    			
-  INC DX                       			
-  MOV AL,8H			;icw2=20h (offset wektora przerwañ)
-  OUT DX,AL                    			
-  MOV AL,4			;icw3=04h (uk³ad master) 		
-  OUT DX,AL                   			
-  MOV AL,1			;icw4=01h (tryb 8086/88) 		
-  OUT DX,AL                   		
-  MOV AL,00H			;ocw1=0fdh (maska przerwañ - master) 
-  OUT DX,AL                		
-  MOV DX,0A1H			;Maska przerwañ - slave 		
-  MOV AL,0FFH                    	
-  OUT DX,AL                        	
 ENDM
 
 INICJACJA_IDTR MACRO
@@ -373,6 +268,7 @@ POP_REG MACRO
   MOV EDI, [SCHOWEK_REJESTROW+20]
 ENDM
 
+;wypisanie na ekranie tekstu
 WYPISZ MACRO NAZWA_ZM, WIELKOSC_ZM, OFFSET_EKRANU, ATRYBUT_ZN
 LOCAL PETLA
   MOV BX, OFFSET NAZWA_ZM
@@ -412,25 +308,24 @@ PM_TASKS MACRO S_TSS0,S_TSS1,G_TSS0,G_TSS1
   MOV [BX].base_m,AL
 ENDM
 
-
+;dwie zagniezdzone pêtle w celu opoznienia dalszego wykonywania kodu
 OPOZNIENIE MACRO ILE
-LOCAL PTL1
-LOCAL PTL2
+LOCAL PRZEBIEG1
+LOCAL PRZEBIEG2
 	MOV BX, ILE
- PTL2:
-	MOV AX,0FFFFH			;wykonanie petli 65535 razy
- PTL1:	
-	NOP
+ PRZEBIEG2:
+	MOV AX,0FFFFH
+ PRZEBIEG1:	
 	SUB AX,1
 	CMP AX,0
-	JNZ PTL1
+	JNZ PRZEBIEG1
 
 	SUB BX,1
 	CMP BX,0
-	JNZ PTL2
-
+	JNZ PRZEBIEG2
 ENDM
 
+;wyczyszczenie calego ekranu po przez wypisanie na calym ekranie spacji/znaków bia³ych
 CZYSC_EKRAN MACRO
 LOCAL EKRN
  EKRN:
@@ -444,6 +339,7 @@ LOCAL EKRN
 	JNE EKRN			                                    
 ENDM
 
+;zmiana koloru calego ekranu na podany w parametrze
 KOLORUJ_EKRAN MACRO KOLOREK
 LOCAL KLR
  KLR:

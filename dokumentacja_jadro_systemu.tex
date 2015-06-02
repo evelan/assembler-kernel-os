@@ -96,8 +96,6 @@ INF 2014/15\\[+10mm]}
 \item{Local Descriptor Table Registers (LDTR) - selektor segmentu tablicy deskryptorów lokalnych}
 \item{Task Registers (TR) - rejestr stanu zadania, selektor stanu zadania}
 \end{itemize}
-
-
 				\item{\textbf{selektor} - w trybie chronionym procesora selektory są umieszczone w rejestrach segmentowych. Format selektora prezentuje się następująco:}
 
 \begin{itemize}
@@ -124,6 +122,11 @@ Odwołanie do odpowiedniego deskryptora wykonuje się za pomocą selektora zapis
 \end{itemize}
 FS oraz GS są dostępne tylko w trybie chronionym. W przypadku wpisania błędnego selektora do rejestru segmentowego otrzymamy błąd ''Ogólnego naruszenia ochrony''. }
 	
+\item{\textbf{rozmieszczenie segmentów w pamięci fizycznej} - wyznaczanie adresu fizycznego na podstawie adresu logicznego wygląda następująco, np. ABCDh:1234h odpowiada następujący adres fizyczny: ABCD0h + 1234h = ACF04h = 708356(10). Adresy segmentów mogą się częściowo nakładać, a nawet w pełni pokrywać ze względu na 16 bitowy offset. }
+
+
+\item{\textbf{Linia A20 (bramka A20)} - w trybie rzeczywistym było nie wiecej niż 20 fizycznych linii adresowych, w celu zachowania kompatybilności jest ona domyślnie nieaktywna}
+
 	\item{\textbf{przerwanie} - jest to sygnał, który powoduje zmianę przepływu sterowania, niezależnie od aktualnie wykonywanego programu. W przypadku pojawienie się przerwania wstrzymywany jest aktualne wykonywane zadanie i następuje skok do innego miejsca w kodzie, np. procedury. Procedura ta wykonuje czynności związane z obsługą przerwania i na końcu wydaje instrukcję powrotu z przerwania, która powoduje powrót do programu realizowanego przed przerwaniem.
 Rozróżniamy kilka typów przerwań:}
 \begin{itemize}
@@ -157,43 +160,83 @@ Rozróżniamy kilka typów przerwań:}
 Procesor na początku swojego działania znajduje się w trybie rzeczywistym, żeby przełączyć go w tryb chroniony musimy zdefiniować strukturę globalnej tablicy deskryptorów (GDT).
 
 \begin{itemize}
-\item{GDT_NULL - wymagany do poprawnego obliczenia całej zajmowanej pamięci przez deskryptory}
-\item{GDT_DANE - opisuje segment danych, możliwy odczyt i zapis danych (flaga 92h)}
-\item{GDT_PROGRAM - opisuje segment programu, kod z tego deskryptora moze być jedynie wyknywany (flaga 98h)}
-\item{GDT_STOS - segment stosuu z flagą 92h o rozmiarze 256bajtów}
-\item{GDT_EKRAN - segment karty graficznej, rozdzielczość 25 wierszy i 80 kolumn, rozmiar segmentu 4096 bajtów i adres bazowy równy B800h}
-\item{GDT_TSS_0, GDT_TSS_1, GDT_TSS_2 -  deskryptory zadań wykorzystywanych w jądrze}
-\item{GDT_MEM - deskryptor o rozmiarze 64kB, umieszczony pod adresem 200000h (2MB)}
-\item{GDT_SIZE - wymagany do poprawnego obliczenia całej zajmowanej pamięci przez deskryptory}
+\item{GDT\_NULL - wymagany do poprawnego obliczenia całej zajmowanej pamięci przez deskryptory}
+\item{GDT\_DANE - opisuje segment danych, możliwy odczyt i zapis danych (flaga 92h)}
+\item{GDT\_PROGRAM - opisuje segment programu, kod z tego deskryptora moze być jedynie wyknywany (flaga 98h)}
+\item{GDT\_STOS - segment stosuu z flagą 92h o rozmiarze 256bajtów}
+\item{GDT\_EKRAN - segment karty graficznej, rozdzielczość 25 wierszy i 80 kolumn, rozmiar segmentu 4096 bajtów i adres bazowy równy B800h}
+\item{GDT\_TSS\_0, GDT\_TSS\_1, GDT\_TSS\_2 -  deskryptory zadań wykorzystywanych w jądrze}
+\item{GDT\_MEM - deskryptor o rozmiarze 64kB, umieszczony pod adresem 400000h (4MB)}
+\item{GDT\_SIZE - wymagany do poprawnego obliczenia całej zajmowanej pamięci przez deskryptory}
 
 \end{itemize}
 
 Następnie w rejestrze CR0 ustawić pierwszy bit (tzw. bit PE - Protection Enable) na 1. Można to zrobić za pomocą instrukcji SMSW lub MOV. Od tej pory nasz procesor pracuje w trybie chronionym. Żeby powrócić do trybu rzeczywistego wystarczy, że wyzerujemy bit PE w rejestrze CR0.
 
-\subsection{Obsługa przerwań i wyjątków za pomocą kontrolera przerwań}
-W wprowadzenia obsługi przerwań musimy:
+\subsection{Pamięć rozszerzona}
+W celu zaadresowania segmentu pamieci pod adresem większym niż 1MB musimy aktywować linię A20, wiele współczesnych BIOS-ów potrafi to zrobić za pomocą odpowiedniego przerwania. Funkcja 24h przerwania 15h, w zależności od wartości przekazanej w rejestrze AL, może wykonywać następujące czynnośc: 
 \begin{itemize}
-\item{utworzyć tablicę deskryptorów przerwań IDTR}
-\item{umieścić w niej adresy procedur obsługi wyjątków, które będa w programie}
-\item{załadować adres tablicy IDT do rejestru IDTR za pomocą instrukcji LIDTR}
-\item{odpowiednie do potrzeb skonfigurowanie kontrolera przerwań}
+\item{AL = 0 - deaktywacja linii A20}
+\item{AL = 1 -aktywacja linii A20}
+\item{AL = 2 -zwrócenie informacji o stanie linii A20}
+\item{AL = 3 - zwrócenie informacji o możliwości aktywacji linii A20 przez port 92h}
+\end{itemize}
+
+Dokładny kod aktywacji linii A20 został przedstawiony w pliku PODST.TXT (linie 33-98)
+
+
+\subsection{Obsługa przerwań i wyjątków}
+Aby wprowadzić obsługi przerwań musimy:
+\begin{itemize}
+\item{utworzyć tablicę deskryptorów przerwań IDTR - MAIN.ASM (linie 17 - 23)}
+\item{umieścić w niej adresy procedur obsługi wyjątków - PODST.TXT (linie 247 - 255) }
+\item{załadować adres tablicy IDT do IDTR - PODST.TXT (linie 258 - 274)}
+\item{odpowiednie skonfigurowanie kontrolera przerwań - PODST.TXT (linie 228 - 245)}
 \end{itemize}
 
 		\subsection{Oprogramowanie kontrolera przerwań}
-Zaprogramowanie pracy kontrolera przerwań polega na zamaskowaniu nieobsługiwanych programowo przerwań sprzętowych (np. myszka czy dysk twardy), zależy nam jedynie na obsłudze zegara systemowego. W pliku PODST.TXT makropolecenie które przyjmuje jako parametr maskę przerwań układu. Wartość 1 na danej pozycji oznacza zablokowanie przerwań na tej linii. Czasomierz systemowy, który posłuży nam do wywoływania przerwań systemowych znajduje się na linii IRQ0. W takim razie użyjemy maski FEh, która binarnie wynosi 1111 1110. Co oznacza że jedynymi przerwaniami sprzętowymi jakie będziemy otrzymywać będą przerwania z czasomierza systemowego.
+Zaprogramowanie pracy kontrolera przerwań polega na zamaskowaniu nieobsługiwanych programowo przerwań sprzętowych (np. myszka czy dysk twardy), zależy nam jedynie na obsłudze zegara systemowego. W pliku PODST.TXT makropolecenie KONTROLER\_PRZERWAN, które przyjmuje jako parametr maskę przerwań układu. Wartość 1 na danej pozycji oznacza zablokowanie przerwań na tej linii. Czasomierz systemowy, który posłuży nam do wywoływania przerwań systemowych znajduje się na linii IRQ0. W takim razie użyjemy maski FEh, która binarnie wynosi 1111 1110. Co oznacza że jedynymi przerwaniami sprzętowymi jakie będziemy otrzymywać będą przerwania z czasomierza systemowego.
 
 \subsection{Obsługa przerwania pochodzącego z czasomierza systemowego}
-W momencie poprawnej konfiguracji kontrolera przerwań ostatnim krokiem do obsługi przerwań jest odblokowanie ich otrzymywania za pomocą instrukcji STI. W tym momencie z każdym przerwaniem czasomierza program będzie przenosić się do linii 55 w pliku MAIN.ASM, gdzie następuje obsługa przerwania.
-Obsługa przerwania to przełączenie zadania na jedno z dwóch za pomocą intrukcji JMP, czyli skoku odległego. W momencie skoku do odpowiedniego zadania, wywoływane jest przerwanie programowe, (instrukcja INT) którego obsługa polega na wyświetleniu informacji o aktywnym zadaniu. 
-Następnie wykonywane jest makro OPOZNIENIE przy pomocy dwóch zagnieżdzonych pętli i wykorzystniu makra z pliku PODST.TXT (linie 312 - 326). Sygnał zakończenia przerwania, czyli informacja dla kontrolera przerwań o zakończeniu obsługi przerwania poprzez zapis wartości 20H na port 20H. Skok na początek aktualnie wykonywanego zadania. W momencie przyjscia kolejnego przerwania jądro znów znajdzie się na linii 56 i całą procedura rozpocznie się od nowa. 
+W momencie poprawnej konfiguracji kontrolera przerwań ostatnim krokiem do obsługi przerwań jest odblokowanie ich otrzymywania za pomocą instrukcji STI. W tym momencie z każdym przerwaniem czasomierza program będzie przenosić się do linii 60 w pliku MAIN.ASM, gdzie następuje obsługa przerwania.
+Obsługa przerwania to przełączenie zadania na jedno z dwóch za pomocą intrukcji porównania CMP i skoku warunkowego JE do opowiedniej etykiety. 
+
+\begin{lstlisting}
+	CMP   AKTYWNE_ZADANIE,1
+	JE    ETYKIETA_ZADANIE_1  
+
+	;...
+		
+	ETYKIETA_ZADANIE_1:
+	MOV AKTYWNE_ZADANIE, 0	
+	JMP DWORD PTR T0_ADDR
+\end{lstlisting}
+
+W momencie skoku do odpowiedniego zadania w pliku MAIN.ASM
+\begin{itemize}
+\item{ZADANIE\_1 - linie 148 - 163}
+\item{ZADANIE\_2 - linie 166 - 182}
+\end{itemize}
+W obu zadaniach wywoływane jest przerwanie programowe (instrukcja INT) którego obsługa polega na wyświetleniu informacji o aktywnym zadaniu. 
+Następnie wykonywane jest makro OPOZNIENIE z pliku PODST.TXT  (linie 312 - 326) przy pomocy dwóch zagnieżdzonych pętli. Sygnał zakończenia przerwania
+\begin{lstlisting}
+	MOV   AL, 20H
+	OUT   20H, AL
+\end{lstlisting}
+
+czyli informacja dla kontrolera przerwań o zakończeniu obsługi przerwania poprzez zapis wartości 20H na port 20H. Skok na początek aktualnie wykonywanego zadania
+\begin{lstlisting}
+	JMP ZADANIE_2_PETLA
+\end{lstlisting}
+W momencie przyjscia kolejnego przerwania jądro znów znajdzie się na linii 60 i całą procedura rozpocznie się od nowa. 
 
 \subsection{Przełączenie zadań z wykorzystaniem przerwań czasomierza systemowego}
 
-Podczas przełączania zadania procesor zapamiętuje kontekst bieżącego zadania w jego segmencie stanu zadania, a następnie odczytuje z TSS kontekst nowego zadania, zawierający selektor segmentu i offset, od którego należy rozpocząć jego realizację.  Następnie wykonywany jest rozkaz skoku odległego 
+Podczas przełączania zadania procesor, następuje zmiana selektora w rejestrze segmentowym CS, zapamiętywany jest kontekst bieżącego zadania, a następnie odczytuje z TSS kontekst nowego zadania, zawierający selektor segmentu i offset, od którego należy rozpocząć jego realizację.  Następnie wykonywany jest rozkaz skoku odległego. W jądrze użyto jedynie globalnych deskryptorów, dlatego nie było problemu ze zmianamy poziomu uprzywilejowania deskryptorów. 
 
 	\section{Zakończenie}
 \subsection{Wnioski i możliwości dalszego rozwoju jądra}
-Realizacja projektu pozwoliła mi na dokładniejsze poznanie procesrów jakie zachodzą we współczesnych systemach operacyjnych. Dzięki praktyce lepiej poznałem teorię architektury komputerów, mogłem dowiedzieć się jak działa jeden z najważniejszych elementów komputera, czyli procesor. Dzięki podziałowi projektu na kilka plików tekstowych z kodem źródłowym, projekt jest bardzo skalowalny. Z łatwością można dodać do niego obsługę klawiatury, czy innych urządzeń zewnętrznych.
+Realizacja projektu pozwoliła mi na dokładniejsze poznanie procesrów jakie zachodzą we współczesnych systemach operacyjnych. Dzięki praktyce lepiej poznałem teorię architektury komputerów, mogłem dowiedzieć się jak działa jeden z najważniejszych elementów komputera, czyli procesor. Dzięki podziałowi projektu na kilka plików tekstowych z kodem źródłowym, projekt jest skalowalny. Z łatwością można dodać do niego obsługę klawiatury, czy innych urządzeń zewnętrznych.
 
 \section{Listing kodów źródłowych}
 

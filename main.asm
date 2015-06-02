@@ -11,7 +11,7 @@ DANE SEGMENT USE16
 	GDT_TSS_0	  DESKR <103,0,0,89H,0,0>             ;segment 40
 	GDT_TSS_1	  DESKR <103,0,0,89H,0,0>             ;segment 48
 	GDT_TSS_2	  DESKR <103,0,0,89H,0,0>             ;segment 56
-	GDT_MEM     DESKR <0FFFFh,0,20h,92h,00h,0>      ;segment 64
+	GDT_MEM     DESKR <0FFFFh,0,40h,92h,00h,0>      ;segment 64
 	GDT_SIZE = $ - GDT_NULL 
 	
 ;Tablica deskryptorow przerwan IDT

@@ -1,9 +1,9 @@
 ;struktura opisujaca deskryptor segmentu
 DESKR	STRUC
   LIMIT	  DW	0   ;16-bitowa granica segmentu
-  BASE_1	DW 	0   ;m³odsze 16 bitów adresu bazowego
+  BASE_1	DW 	0   ;mlodsze 16 bitow adresu bazowego
   BASE_M	DB	0   ;adres bazowy bity 16-23
-  ATTR_1	DB 	0   ;prawa dostêpu
+  ATTR_1	DB 	0   ;prawa dostepu
   ATTR_2	DB	0   ;atrybuty oraz 4 najstarsze bity granicy segmentu
   BASE_H	DB	0   ;adres bazowy bity 23-31
 DESKR	ENDS

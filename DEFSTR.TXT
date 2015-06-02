@@ -1,11 +1,11 @@
 ;struktura opisujaca deskryptor segmentu
 DESKR	STRUC
-  LIMIT	  DW	0   ;rozmiar
-  BASE_1	DW 	0   ;
-  BASE_M	DB	0
-  ATTR_1	DB 	0   ;atrybuty 
-  ATTR_2	DB	0   ;atrybuty 
-  BASE_H	DB	0
+  LIMIT	  DW	0   ;16-bitowa granica segmentu
+  BASE_1	DW 	0   ;m³odsze 16 bitów adresu bazowego
+  BASE_M	DB	0   ;adres bazowy bity 16-23
+  ATTR_1	DB 	0   ;prawa dostêpu
+  ATTR_2	DB	0   ;atrybuty oraz 4 najstarsze bity granicy segmentu
+  BASE_H	DB	0   ;adres bazowy bity 23-31
 DESKR	ENDS
 
 ;Struktura opisujaca furtke pulapki:

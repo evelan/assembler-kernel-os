@@ -10,7 +10,6 @@
 \usepackage[utf8]{inputenc} 
 \usepackage{indentfirst}%wcięcie pierwszego wiersza
 \usepackage{listings}%listing kodu
-
         
 \textheight=24.5cm
 \textwidth=17cm
@@ -66,7 +65,7 @@ INF 2014/15\\[+10mm]}
 	
 	\section{Wprowadzenie}
 		\subsection{Plan projektu i osiągnięcia}
-		Projekt polegał na napisaniu prostego jądra systemu operacyjnego, przejścia w tryb chroniony i przełączaniu zadań za pomocą przerwań wywoływanych po przez zegar systemowy. Kod źródłowy jądra został napisany w Turbo Assemblerze i uruchamiany jest w DOSBoxie 0.74. Początkowy plan zakładł napisanie jądra, bootloadera i uruchamianie jądra na komputerze PC z procesorem Intel Pentium z dyskietki. Niestety nie udało mi się skończyć pisać bootloadera, dlatego jądro uruchamiane jest w emulatorze DOSBox. Plan prac wyglądał następująco:
+		Projekt polegał na napisaniu prostego jądra systemu operacyjnego, przejścia w tryb chroniony i przełączaniu zadań za pomocą przerwań wywoływanych poprzez zegar systemowy. Kod źródłowy jądra został napisany w Turbo Assemblerze i uruchamiany jest w DOSBoxie 0.74. Początkowy plan zakładł napisanie jądra, bootloadera i uruchamianie jądra na komputerze PC z procesorem Intel Pentium z dyskietki. Niestety nie udało mi się skończyć pisać bootloadera, dlatego jądro uruchamiane jest w emulatorze DOSBox. Plan prac wyglądał następująco:
 			\begin{itemize}
 				\item{przygotowanie środowiska pracy oraz narzędzi}
 				\item{przełączenie procesora w tryb chroniony}
@@ -77,11 +76,11 @@ INF 2014/15\\[+10mm]}
 
 	\subsection{Podstawowe pojęcia}
 \begin{enumerate}
-				\item{\textbf{tryb rzeczywisty} - jest to tryb pracy mikroprocesorów z rodziny procesorów x86, w którym procesor pracuje jak Intel 8086. Tryb ten nie zapewnia ochorny pamięci prze użyciem jej przez inny proces oraz obsługi wielozadaniowości. Dostępna jest jedynie 1 megabajtowa przestrzeń adresowa}
+				\item{\textbf{tryb rzeczywisty} - jest to tryb pracy mikroprocesorów z rodziny procesorów x86, w którym procesor pracuje jak Intel 8086. Tryb ten nie zapewnia ochorny pamięci przed użyciem jej przez inny proces oraz obsługi wielozadaniowości. Dostępna jest jedynie 1-megabajtowa przestrzeń adresowa}
 
-				\item{\textbf{tryb chroniony procesora} - tryb pracy procesora który umożliwia adresowanie pamieci przekraczającej 1 megabajt pamięci, sprzętowa ochrona pamięci, wsparcie w przełączeniu kontekstu procesora, stronnicowanie pamięci (32 bitowe procesory) }
+				\item{\textbf{tryb chroniony procesora} - tryb pracy procesora, który umożliwia adresowanie pamieci przekraczającej 1-megabajt pamięci, sprzętowa ochrona pamięci, wsparcie w przełączeniu kontekstu procesora, stronnicowanie pamięci (32 bitowe procesory) }
 
-				\item{\textbf{deskryptor} - 64 bitowa struktura danych w której przechowywane są informacje na temat miejsca w pamięci danego segmentu, typu, rozmiaru, zasady dostępu do segmentu oraz pozostałe informacje przydatne przy dostępie do segmentu w trybie chronionym procesora. }
+				\item{\textbf{deskryptor} - 64-bitowa struktura danych w której przechowywane są informacje na temat miejsca w pamięci danego segmentu, typu, rozmiaru, zasady dostępu do segmentu oraz pozostałe informacje przydatne przy dostępie do segmentu w trybie chronionym procesora. }
 
 				\item{\textbf{tablice deskryptorów} - w trybie chronionym posługujemy się tablicami deskryptorów, wyróżniamy trzy podstawowe struktury: }
 \begin{itemize}
@@ -123,9 +122,9 @@ Odwołanie do odpowiedniego deskryptora wykonuje się za pomocą selektora zapis
 \item{rejestr SS - musi mieć ustawione prawa zapisu oraz odczytu}
 \item{rejestr CS - wymaga prawa kodu wykonywalnego}
 \end{itemize}
-FS oraz GS są dostępne tylko w trybie chronionym. W przypadku wpisania błędnego selektora do rejestru segmentowego otrzymamy błąd "Ogólnego naruszenia ochrony". }
+FS oraz GS są dostępne tylko w trybie chronionym. W przypadku wpisania błędnego selektora do rejestru segmentowego otrzymamy błąd ''Ogólnego naruszenia ochrony''. }
 	
-	\item{\textbf{przerwanie} - jest to sygnał, który powoduje zmianę przepływu sterowania, niezależnie od aktualnie wykonywanego programu. W przypadku pojawienie się przerwania wstrzymywany jest aktualne wykonywane zadanie i następuje skok do procedury obsługi przerwania. Procedura ta wykonuje czynności związane z obsługą przerwania i na końcu wydaje instrukcję powrotu z przerwania, która powoduje powrót do programu realizowanego przed przerwaniem.
+	\item{\textbf{przerwanie} - jest to sygnał, który powoduje zmianę przepływu sterowania, niezależnie od aktualnie wykonywanego programu. W przypadku pojawienie się przerwania wstrzymywany jest aktualne wykonywane zadanie i następuje skok do innego miejsca w kodzie, np. procedury. Procedura ta wykonuje czynności związane z obsługą przerwania i na końcu wydaje instrukcję powrotu z przerwania, która powoduje powrót do programu realizowanego przed przerwaniem.
 Rozróżniamy kilka typów przerwań:}
 \begin{itemize}
 \item{programowe - wywoływane przez programistę, instrukcją INT + kod przerwania, lub w przypadku operacji niedozwolonych, np. dzielenie przez zero}
@@ -135,16 +134,41 @@ Rozróżniamy kilka typów przerwań:}
 
 \item{\textbf{kontroler przerwań} - układ obsługi przerwań w komputerach PC jest zbudowany z dwóch połączonych kaskadowo układów 8259A, dzięki temu możliwa jest obsługa 15 przerwań sprzętowych - wejście IRQ2 układu master jest połączone z wyjściem układu slave. Kontroler klawiatury znajduje się na linii IRQ1, a czasomierz systemowy na linii IRQ0}
 				\item{\textbf{czasomierz systemowy (lub zegar systemowy)} - jest to fizyczne urządzenie znajdujące się na płycie głównej komputera, odpowiedzialne za dostarczanie aktualnego czasu i daty do komputera. Odpowiada również za dostarczanie sygnałów synchronizujących działanie podzespołów komputera z dokładnością do tysięcznych części sekundy.}
+
+				\item{\textbf{czasomierz systemowy (lub zegar systemowy)} - jest to fizyczne urządzenie znajdujące się na płycie głównej komputera, odpowiedzialne za dostarczanie aktualnego czasu i daty do komputera. Odpowiada również za dostarczanie sygnałów synchronizujących działanie podzespołów komputera z dokładnością do tysięcznych części sekundy.}
+
+\item{\textbf{zadanie (ang. task)} - rozumiemy jako wykonywany program lub niezależny jego fragment }
+
+\item{\textbf{Task State Segment (TSS) } - segment stanu zadania jest rekordem wchodzącym w skład segmentu danych lub oddzielonym segmentem o niewielkim rozmiarze. Każde zadanie ma swój segment stanu zadania. Segmentowi TSS odpowiada systemowy deskryptor tego segmentu, przechowywany w globalnej tablicy deskryptorów. Struktura jest analogiczna do deskryptora pamięci, jedyna różnica polega na różnych kodach typów segmentów. }
 			
 \end{enumerate}
 
-	\section{Praca jądra systemu w trybie chronionym}
+
+
 
 	\subsection{Środowisko pracy i narzędzia}
 	Jądro systemu było testowane za pomocą programu DOSBox 0.74 na komputerze z systemem Windows 8.1 x64. Program DOSBox 0.74 jest pełnym emulatrem procesora Intel 80386 udostępnianym na licencji GNU GPL. Kod jądra był asemblowany za pomocą TASM.exe (Turbo Assembler) oraz linkowany za pomocą TLINK.exe (Turbo Linker). 
 
+
+	\section{Praca jądra systemu w trybie chronionym}
+
+
 	\subsection{Przełączanie procesora w tryb chroniony}
-Procesor na początku swojego działania znajduje się w trybie rzeczywistym, żeby przełączyć go w tryb chroniony musimy zdefiniować strukturę globalnej tablicy deskryptorów (GDT), następnie w rejestrze CR0 ustawić pierwszy bit (tzw. bit PE - Protection Enable) na 1. Można to zrobić za pomocą instrukcji SMSW lub MOV. Od tej pory nasz procesor pracuje w trybie chronionym. Żeby powrócić do trybu rzeczywistego wystarczy, że wyzerujemy bit PE w rejestrze CR0.
+Procesor na początku swojego działania znajduje się w trybie rzeczywistym, żeby przełączyć go w tryb chroniony musimy zdefiniować strukturę globalnej tablicy deskryptorów (GDT).
+
+\begin{itemize}
+\item{GDT_NULL - wymagany do poprawnego obliczenia całej zajmowanej pamięci przez deskryptory}
+\item{GDT_DANE - opisuje segment danych, możliwy odczyt i zapis danych (flaga 92h)}
+\item{GDT_PROGRAM - opisuje segment programu, kod z tego deskryptora moze być jedynie wyknywany (flaga 98h)}
+\item{GDT_STOS - segment stosuu z flagą 92h o rozmiarze 256bajtów}
+\item{GDT_EKRAN - segment karty graficznej, rozdzielczość 25 wierszy i 80 kolumn, rozmiar segmentu 4096 bajtów i adres bazowy równy B800h}
+\item{GDT_TSS_0, GDT_TSS_1, GDT_TSS_2 -  deskryptory zadań wykorzystywanych w jądrze}
+\item{GDT_MEM - deskryptor o rozmiarze 64kB, umieszczony pod adresem 200000h (2MB)}
+\item{GDT_SIZE - wymagany do poprawnego obliczenia całej zajmowanej pamięci przez deskryptory}
+
+\end{itemize}
+
+Następnie w rejestrze CR0 ustawić pierwszy bit (tzw. bit PE - Protection Enable) na 1. Można to zrobić za pomocą instrukcji SMSW lub MOV. Od tej pory nasz procesor pracuje w trybie chronionym. Żeby powrócić do trybu rzeczywistego wystarczy, że wyzerujemy bit PE w rejestrze CR0.
 
 \subsection{Obsługa przerwań i wyjątków za pomocą kontrolera przerwań}
 W wprowadzenia obsługi przerwań musimy:
@@ -161,30 +185,60 @@ Zaprogramowanie pracy kontrolera przerwań polega na zamaskowaniu nieobsługiwan
 \subsection{Obsługa przerwania pochodzącego z czasomierza systemowego}
 W momencie poprawnej konfiguracji kontrolera przerwań ostatnim krokiem do obsługi przerwań jest odblokowanie ich otrzymywania za pomocą instrukcji STI. W tym momencie z każdym przerwaniem czasomierza program będzie przenosić się do linii 55 w pliku MAIN.ASM, gdzie następuje obsługa przerwania.
 Obsługa przerwania to przełączenie zadania na jedno z dwóch za pomocą intrukcji JMP, czyli skoku odległego. W momencie skoku do odpowiedniego zadania, wywoływane jest przerwanie programowe, (instrukcja INT) którego obsługa polega na wyświetleniu informacji o aktywnym zadaniu. 
-Następnie wykonywane jest makro OPOZNIENIE przy pomocy dwóch zagnieżdzonych pętli i wykorzystniu makra z pliku PODST.TXT (linie 312 - 326). Sygnał zakończenia przerwania, czyli informacja dla kontrolera przerwań o zakończeniu obsługi przerwania po przez zapis wartości 20H na port 20H. Skok na początek aktualnie wykonywanego zadania. W momencie przyjscia kolejnego przerwania jądro znów znajdzie się na linii 56 i całą procedura rozpocznie się od nowa. 
+Następnie wykonywane jest makro OPOZNIENIE przy pomocy dwóch zagnieżdzonych pętli i wykorzystniu makra z pliku PODST.TXT (linie 312 - 326). Sygnał zakończenia przerwania, czyli informacja dla kontrolera przerwań o zakończeniu obsługi przerwania poprzez zapis wartości 20H na port 20H. Skok na początek aktualnie wykonywanego zadania. W momencie przyjscia kolejnego przerwania jądro znów znajdzie się na linii 56 i całą procedura rozpocznie się od nowa. 
 
 \subsection{Przełączenie zadań z wykorzystaniem przerwań czasomierza systemowego}
 
 Podczas przełączania zadania procesor zapamiętuje kontekst bieżącego zadania w jego segmencie stanu zadania, a następnie odczytuje z TSS kontekst nowego zadania, zawierający selektor segmentu i offset, od którego należy rozpocząć jego realizację.  Następnie wykonywany jest rozkaz skoku odległego 
 
-
 	\section{Zakończenie}
+\subsection{Wnioski i możliwości dalszego rozwoju jądra}
+Realizacja projektu pozwoliła mi na dokładniejsze poznanie procesrów jakie zachodzą we współczesnych systemach operacyjnych. Dzięki praktyce lepiej poznałem teorię architektury komputerów, mogłem dowiedzieć się jak działa jeden z najważniejszych elementów komputera, czyli procesor. Dzięki podziałowi projektu na kilka plików tekstowych z kodem źródłowym, projekt jest bardzo skalowalny. Z łatwością można dodać do niego obsługę klawiatury, czy innych urządzeń zewnętrznych.
+
+\section{Listing kodów źródłowych}
+
+\lstset{
+	numbers=left, 
+	language={[x86masm]Assembler}
+}
+
+\subsection{\textit{DEFSTR.TXT} - struktura deskryptorów}
+\lstinputlisting{DEFSTR.TXT}
+
+\subsection{\textit{MAIN.ASM} - kod główny}
+\lstinputlisting{MAIN.ASM}
+
+\subsection{\textit{PODST.TXT} - podstawowe funkcje jądra}
+\lstinputlisting{PODST.TXT}
+
+\subsection{\textit{OBSLPUL.TXT} - kod obsługi pułapek}
+\lstinputlisting{OBSLPUL.TXT}
+
+\subsection{\textit{TXTPUL.TXT} - tekst i atrybuty użyte w kodzie obsługi pułapek}
+\lstinputlisting{TXTPUL.TXT}
+
+\subsection{\textit{RODZPUL.TXT} - lista pułapek}
+\lstinputlisting{RODZPUL.TXT}
+
 
 	
-	\section{Bibiliografia}
+\section{Bibiliografia}
 \begin{thebibliography}{999}
 \bibitem{aa1} W. Stanisławski, D.Raczyński 
 {\em Programowanie systemowe mikroprocesorów rodziny x86},
-PWN, Warszawa, 2010.
+PWN, Warszawa 2010. ISBN 978-83-01-16383-9.
 
-\bibitem{aa2} G.Syck,
+\bibitem{aa2} J. Biernat,
+{\em Architektura komputerów}, 
+Oficyna Wydawnicza Politechniki Wrocławskiej, Wrocław 2005. ISBN 83-7085-878-3.
+
+\bibitem{aa3} G.Syck,
 {\em Turbo Assembler - Biblia użytkownika}, 
-LT\&P, Warszawa, 1994.
+LT\&P, Warszawa 1994. ISBN 83-901237-2-X.
 
-%\bibitem{aa3} A. Autor1, B. C. Autor2, 
-%{\em Tytu\l{} ksi\k{a}\.zki}, 
-%Nazwa Wydawcy, Miejsce Wydania, 1992.
-
+\bibitem{aa4} J. Bielecki,
+{\em Turbo Assembler }, 
+PLJ, Warszawa 1991. ISBN 83-85190-10-4.
 
 \end{thebibliography}	
 

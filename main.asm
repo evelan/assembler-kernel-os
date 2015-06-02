@@ -1,6 +1,4 @@
 .386P
-INCLUDE DEFSTR.TXT
-
 DANE SEGMENT USE16
 	GDT_NULL 	  DESKR <0,0,0,0,0,0>                 ;segment 0
 	GDT_DANE 	  DESKR <DANE_SIZE-1,0,0,92H,0,0>     ;segment 8
@@ -10,6 +8,7 @@ DANE SEGMENT USE16
 	GDT_TSS_0	  DESKR <103,0,0,89H,0,0>             ;segment 40
 	GDT_TSS_1	  DESKR <103,0,0,89H,0,0>             ;segment 48
 	GDT_TSS_2	  DESKR <103,0,0,89H,0,0>             ;segment 56
+	GDT_MEM     DESKR <0FFFFh,0,20h,92h,00h,0>      ;segment 64
 	GDT_SIZE = $ - GDT_NULL 
 	
 ;Tablica deskryptorow przerwan IDT
@@ -38,6 +37,9 @@ DANE SEGMENT USE16
 	PUSTE             DB ' '
 	AKTYWNE_ZADANIE   DW 0
 	CZAS              DW 0
+   
+  A20               DB 0
+	FAST_A20          DB 0
 	
 	POZYCJA_1         DW 320
 	POZYCJA_2         DW 2560
@@ -47,7 +49,7 @@ DANE_SIZE= $ - GDT_NULL
 DANE ENDS
 
 PROGRAM	SEGMENT 'CODE' USE16
-        ASSUME CS:PROGRAM, DS:DANE, SS:STK ;informacja dla TASMa jakie segmenty s¹ w których rejestrach segmentowych
+        ASSUME CS:PROGRAM, DS:DANE, SS:STK ;informacja dla TASMa jakie segmenty sa w ktorych rejestrach segmentowych
 POCZ LABEL WORD
 
 INCLUDE OBSLPUL.TXT
@@ -58,10 +60,10 @@ PROC_0	PROC
 	PUSH  DX
 
 	CMP   AKTYWNE_ZADANIE,1	    ;czy AKTYWNE_ZADANIE == 1? 
-	JE    ETYKIETA_ZADANIE_1    ;jeœli tak to skaczemy do ETYKIETA_ZADANIE_1
+	JE    ETYKIETA_ZADANIE_1    ;jesli tak to skaczemy do ETYKIETA_ZADANIE_1
 	
 	CMP   AKTYWNE_ZADANIE,0	    ;czy AKTYWNE_ZADANIE == 0?
-	JE    ETYKIETA_ZADANIE_2    ;jeœli tak to skaczemy do ETYKIETA_ZADANIE_2
+	JE    ETYKIETA_ZADANIE_2    ;jesli tak to skaczemy do ETYKIETA_ZADANIE_2
 	JMP   DALEJ
 		
   ETYKIETA_ZADANIE_1:
@@ -117,8 +119,8 @@ START:
 	MOV DWORD PTR TSS_2+24H, EAX
 
 	CLI                                     ;blokujemy przerwania
-	WPISZ_IDTR                              ;zapisujemy tablicê deskryptorów przerwañ 
-	KONTROLER_PRZERWAN 0FEH                 ;konfigurujemy kontroler przerwañ do obs³ugi czasomierza
+	WPISZ_IDTR                              ;zapisujemy tablice deskryptorow przerwan 
+	KONTROLER_PRZERWAN 0FEH                 ;konfigurujemy kontroler przerwan do obslugi czasomierza
 	TRYB_CHRONIONY                          ;przechodzimy w tryb chroniony
 	
 	MOV AX, 32
@@ -142,7 +144,7 @@ ZADANIE_1_PETLA:
 	MOV AH, 02h	
 	MOV ES:[BX], AX
 	
-	INT 2                       ;wywolanie przerwania z informacj¹ o aktualnym zadaniu 
+	INT 2                       ;wywolanie przerwania z informacja o aktualnym zadaniu 
 	OPOZNIENIE 200
 
  	ADD POZYCJA_1, 2
@@ -161,7 +163,7 @@ ZADANIE_2_PETLA:
 	MOV AH, 02h
 	MOV ES:[BX], AX
 	
-	INT 3                       ;wywolanie przerwania z informacj¹ o aktualnym zadaniu 
+	INT 3                       ;wywolanie przerwania z informacja o aktualnym zadaniu 
 	OPOZNIENIE 300
 	
  	ADD POZYCJA_2, 2	

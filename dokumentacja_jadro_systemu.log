@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-2.5-1.40.14 (MiKTeX 2.9) (preloaded format=pdflatex 2015.5.19)  2 JUN 2015 12:49
+This is pdfTeX, Version 3.1415926-2.5-1.40.14 (MiKTeX 2.9) (preloaded format=pdflatex 2015.5.19)  2 JUN 2015 14:25
 entering extended mode
 **C:/AK/TEST/FINAL/dokumentacja_jadro_systemu.tex
 (C:/AK/TEST/FINAL/dokumentacja_jadro_systemu.tex
@@ -397,7 +397,7 @@ Overfull \hbox (30.83197pt too wide) in paragraph at lines 17--18
 [][][][][][][][][][][][][][][][][][][][][][][][] 
  []
 
-[8]) (C:\AK\TEST\FINAL\MAIN.ASM
+) (C:\AK\TEST\FINAL\MAIN.ASM
 Overfull \hbox (23.78363pt too wide) in paragraph at lines 6--7
 [][][][][][][][][][][][][][][][][][][] 
  []
@@ -417,7 +417,7 @@ Overfull \hbox (16.73529pt too wide) in paragraph at lines 10--11
 [][][][][][][][][][][][][][][][][][][][][][][] 
  []
 
-
+[8]
 Overfull \hbox (30.83197pt too wide) in paragraph at lines 11--12
 [][][][][][][][][][][][][][][][][][][][] 
  []
@@ -442,13 +442,13 @@ Overfull \hbox (2.63861pt too wide) in paragraph at lines 30--31
 [][][][][][][][][][][][][][][][][][][][][][][][] 
  []
 
-[9]
+
 Overfull \hbox (333.91058pt too wide) in paragraph at lines 55--56
 [][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][
 ] 
  []
 
-
+[9]
 Overfull \hbox (80.17035pt too wide) in paragraph at lines 66--68
 [][][][][][][][][][][][][][][][][][][][][][][][] 
  []
@@ -458,7 +458,7 @@ Overfull \hbox (80.17035pt too wide) in paragraph at lines 69--70
 [][][][][][][][][][][][][][][][][][][][][][][][] 
  []
 
-[10]
+
 Overfull \hbox (9.68695pt too wide) in paragraph at lines 105--106
 [][][][][][][][][][][][][][][][][][][][][][][][][][][] 
  []
@@ -468,7 +468,7 @@ Overfull \hbox (51.97699pt too wide) in paragraph at lines 106--107
 [][][][][][][][][][][][][][][][][][][][][][][][][][][][][] 
  []
 
-
+[10]
 Overfull \hbox (51.97699pt too wide) in paragraph at lines 108--109
 [][][][][][][][][][][][][][][][][][][][][][][][][][][][][] 
  []
@@ -523,12 +523,12 @@ Overfull \hbox (66.07367pt too wide) in paragraph at lines 131--133
 [][][][][][][][][][][][][][][][] 
  []
 
-[11]
+
 Overfull \hbox (150.65375pt too wide) in paragraph at lines 154--155
 [][][][][][][][][][][][][][][][][][][][][][][][] 
  []
 
-
+[11]
 Overfull \hbox (9.68695pt too wide) in paragraph at lines 159--160
 [][][][][][][][][][][][][][][][][][][][][][][][] 
  []
@@ -543,7 +543,7 @@ Overfull \hbox (9.68695pt too wide) in paragraph at lines 178--179
 [][][][][][][][][][][][][][][][][][][][][][][][] 
  []
 
-[12]) (C:\AK\TEST\FINAL\PODST.TXT
+) (C:\AK\TEST\FINAL\PODST.TXT [12]
 Overfull \hbox (66.07367pt too wide) in paragraph at lines 34--35
 [][][][][][][][][][][][][][][][][][][][] 
  []
@@ -553,12 +553,12 @@ Overfull \hbox (9.68695pt too wide) in paragraph at lines 75--76
 [][][][][][][][][][][][][][][][][][][][][][][][] 
  []
 
-[14]
+
 Overfull \hbox (59.02533pt too wide) in paragraph at lines 101--102
 [][][][][][][][][][][][][][][][][][][][][] 
  []
 
-
+[14]
 Overfull \hbox (9.68695pt too wide) in paragraph at lines 131--132
 [][][][][][][][][][][][][][][][][][][][][][][][] 
  []
@@ -574,16 +574,16 @@ Overfull \hbox (30.83197pt too wide) in paragraph at lines 221--222
  []
 
 [17] [18] [19]) (C:\AK\TEST\FINAL\OBSLPUL.TXT [20] [21] [22] [23])
-(C:\AK\TEST\FINAL\TXTPUL.TXT [24]) (C:\AK\TEST\FINAL\RODZPUL.TXT) [25] [26]
+(C:\AK\TEST\FINAL\TXTPUL.TXT) [24] (C:\AK\TEST\FINAL\RODZPUL.TXT) [25]
 (C:\AK\TEST\FINAL\dokumentacja_jadro_systemu.aux) ) 
 Here is how much of TeX's memory you used:
  3390 strings out of 493921
  41952 string characters out of 3144876
- 140849 words of memory out of 3000000
+ 138793 words of memory out of 3000000
  6654 multiletter control sequences out of 15000+200000
  18509 words of font info for 41 fonts, out of 3000000 for 9000
  841 hyphenation exceptions out of 8191
- 26i,20n,41p,744b,1980s stack positions out of 5000i,500n,10000p,200000b,50000s
+ 26i,20n,41p,744b,1548s stack positions out of 5000i,500n,10000p,200000b,50000s
  <C:\Users\Jakub\AppData\Loc
 al\MiKTeX\2.9\fonts\pk\ljfour\jknappen\ec\dpi600\ecbi1440.pk> <C:\Users\Jakub\A
 ppData\Local\MiKTeX\2.9\fonts\pk\ljfour\jknappen\ec\dpi600\ecbx1440.pk> <C:\Use
@@ -599,9 +599,9 @@ AppData\Local\MiKTeX\2.9\fonts\pk\ljfour\jknappen\ec\dpi600\ecss1728.pk> <C:\Us
 ers\Jakub\AppData\Local\MiKTeX\2.9\fonts\pk\ljfour\jknappen\ec\dpi600\ecss2074.
 pk><C:/Program Files (x86)/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmsy10.pfb
 >
-Output written on dokumentacja_jadro_systemu.pdf (26 pages, 230020 bytes).
+Output written on dokumentacja_jadro_systemu.pdf (25 pages, 230214 bytes).
 PDF statistics:
- 560 PDF objects out of 1000 (max. 8388607)
+ 558 PDF objects out of 1000 (max. 8388607)
  0 named destinations out of 1000 (max. 500000)
  1 words of extra memory for PDF output out of 10000 (max. 10000000)
 

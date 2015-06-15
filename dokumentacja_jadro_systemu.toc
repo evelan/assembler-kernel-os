@@ -7,15 +7,15 @@
 \contentsline {subsection}{\numberline {2.1}Prze\IeC {\l }\IeC {\k a}czanie procesora w tryb chroniony}{5}
 \contentsline {subsection}{\numberline {2.2}Pami\IeC {\k e}\IeC {\'c} rozszerzona}{6}
 \contentsline {subsection}{\numberline {2.3}Obs\IeC {\l }uga przerwa\IeC {\'n} i wyj\IeC {\k a}tk\IeC {\'o}w}{6}
-\contentsline {subsection}{\numberline {2.4}Oprogramowanie kontrolera przerwa\IeC {\'n}}{7}
+\contentsline {subsection}{\numberline {2.4}Oprogramowanie kontrolera przerwa\IeC {\'n}}{6}
 \contentsline {subsection}{\numberline {2.5}Obs\IeC {\l }uga przerwania pochodz\IeC {\k a}cego z czasomierza systemowego}{7}
-\contentsline {subsection}{\numberline {2.6}Prze\IeC {\l }\IeC {\k a}czenie zada\IeC {\'n} z wykorzystaniem przerwa\IeC {\'n} czasomierza systemowego}{8}
-\contentsline {section}{\numberline {3}Zako\IeC {\'n}czenie}{8}
-\contentsline {subsection}{\numberline {3.1}Wnioski i mo\IeC {\.z}liwo\IeC {\'s}ci dalszego rozwoju j\IeC {\k a}dra}{8}
+\contentsline {subsection}{\numberline {2.6}Prze\IeC {\l }\IeC {\k a}czenie zada\IeC {\'n} z wykorzystaniem przerwa\IeC {\'n} czasomierza systemowego}{7}
+\contentsline {section}{\numberline {3}Zako\IeC {\'n}czenie}{7}
+\contentsline {subsection}{\numberline {3.1}Wnioski i mo\IeC {\.z}liwo\IeC {\'s}ci dalszego rozwoju j\IeC {\k a}dra}{7}
 \contentsline {section}{\numberline {4}Listing kod\IeC {\'o}w \IeC {\'z}r\IeC {\'o}d\IeC {\l }owych}{8}
 \contentsline {subsection}{\numberline {4.1}\textit {DEFSTR.TXT} - struktura deskryptor\IeC {\'o}w}{8}
-\contentsline {subsection}{\numberline {4.2}\textit {MAIN.ASM} - kod g\IeC {\l }\IeC {\'o}wny}{9}
-\contentsline {subsection}{\numberline {4.3}\textit {PODST.TXT} - podstawowe funkcje j\IeC {\k a}dra}{13}
+\contentsline {subsection}{\numberline {4.2}\textit {MAIN.ASM} - kod g\IeC {\l }\IeC {\'o}wny}{8}
+\contentsline {subsection}{\numberline {4.3}\textit {PODST.TXT} - podstawowe funkcje j\IeC {\k a}dra}{12}
 \contentsline {subsection}{\numberline {4.4}\textit {OBSLPUL.TXT} - kod obs\IeC {\l }ugi pu\IeC {\l }apek}{20}
 \contentsline {subsection}{\numberline {4.5}\textit {TXTPUL.TXT} - tekst i atrybuty u\IeC {\.z}yte w kodzie obs\IeC {\l }ugi pu\IeC {\l }apek}{24}
 \contentsline {subsection}{\numberline {4.6}\textit {RODZPUL.TXT} - lista pu\IeC {\l }apek}{25}

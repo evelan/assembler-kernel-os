@@ -138,8 +138,6 @@ Rozróżniamy kilka typów przerwań:}
 \item{\textbf{kontroler przerwań} - układ obsługi przerwań w komputerach PC jest zbudowany z dwóch połączonych kaskadowo układów 8259A, dzięki temu możliwa jest obsługa 15 przerwań sprzętowych - wejście IRQ2 układu master jest połączone z wyjściem układu slave. Kontroler klawiatury znajduje się na linii IRQ1, a czasomierz systemowy na linii IRQ0}
 				\item{\textbf{czasomierz systemowy (lub zegar systemowy)} - jest to fizyczne urządzenie znajdujące się na płycie głównej komputera, odpowiedzialne za dostarczanie aktualnego czasu i daty do komputera. Odpowiada również za dostarczanie sygnałów synchronizujących działanie podzespołów komputera z dokładnością do tysięcznych części sekundy.}
 
-				\item{\textbf{czasomierz systemowy (lub zegar systemowy)} - jest to fizyczne urządzenie znajdujące się na płycie głównej komputera, odpowiedzialne za dostarczanie aktualnego czasu i daty do komputera. Odpowiada również za dostarczanie sygnałów synchronizujących działanie podzespołów komputera z dokładnością do tysięcznych części sekundy.}
-
 \item{\textbf{zadanie (ang. task)} - rozumiemy jako wykonywany program lub niezależny jego fragment }
 
 \item{\textbf{Task State Segment (TSS) } - segment stanu zadania jest rekordem wchodzącym w skład segmentu danych lub oddzielonym segmentem o niewielkim rozmiarze. Każde zadanie ma swój segment stanu zadania. Segmentowi TSS odpowiada systemowy deskryptor tego segmentu, przechowywany w globalnej tablicy deskryptorów. Struktura jest analogiczna do deskryptora pamięci, jedyna różnica polega na różnych kodach typów segmentów. }
@@ -150,8 +148,7 @@ Rozróżniamy kilka typów przerwań:}
 
 
 	\subsection{Środowisko pracy i narzędzia}
-	Jądro systemu było testowane za pomocą programu DOSBox 0.74 na komputerze z systemem Windows 8.1 x64. Program DOSBox 0.74 jest pełnym emulatrem procesora Intel 80386 udostępnianym na licencji GNU GPL. Kod jądra był asemblowany za pomocą TASM.exe (Turbo Assembler) oraz linkowany za pomocą TLINK.exe (Turbo Linker). 
-
+	Jądro systemu było testowane za pomocą programu DOSBox 0.74 na komputerze z systemem Windows 8.1 x64. Program DOSBox 0.74 jest pełnym emulatrem procesora Intel 80386 udostępnianym na licencji GNU GPL. Kod jądra był asemblowany za pomocą TASM.exe (Turbo Assembler) oraz linkowany za pomocą TLINK.exe (Turbo Linker). W celu uruchomienia projektu należy zasemblować plik MAIN.ASM poleceniem TASM MAIN.ASM, zlinkować TLINK MAIN.OBJ i uruchomić MAIN.EXE w emulatorze DOSBox. 
 
 	\section{Praca jądra systemu w trybie chronionym}
 
@@ -166,19 +163,19 @@ Procesor na początku swojego działania znajduje się w trybie rzeczywistym, ż
 \item{GDT\_STOS - segment stosuu z flagą 92h o rozmiarze 256bajtów}
 \item{GDT\_EKRAN - segment karty graficznej, rozdzielczość 25 wierszy i 80 kolumn, rozmiar segmentu 4096 bajtów i adres bazowy równy B800h}
 \item{GDT\_TSS\_0, GDT\_TSS\_1, GDT\_TSS\_2 -  deskryptory zadań wykorzystywanych w jądrze}
-\item{GDT\_MEM - deskryptor o rozmiarze 64kB, umieszczony pod adresem 400000h (4MB)}
+\item{GDT\_MEM - deskryptor o rozmiarze 64kB, umieszczony pod adresem 40000h (4MB)}
 \item{GDT\_SIZE - wymagany do poprawnego obliczenia całej zajmowanej pamięci przez deskryptory}
 
 \end{itemize}
 
-Następnie w rejestrze CR0 ustawić pierwszy bit (tzw. bit PE - Protection Enable) na 1. Można to zrobić za pomocą instrukcji SMSW lub MOV. Od tej pory nasz procesor pracuje w trybie chronionym. Żeby powrócić do trybu rzeczywistego wystarczy, że wyzerujemy bit PE w rejestrze CR0.
+Następnie w rejestrze CR0 należy ustawić pierwszy bit (tzw. bit PE - Protection Enable) na 1. Można to zrobić za pomocą instrukcji SMSW lub MOV. Od tej pory nasz procesor pracuje w trybie chronionym. Żeby powrócić do trybu rzeczywistego wystarczy, że wyzerujemy bit PE w rejestrze CR0.
 
 \subsection{Pamięć rozszerzona}
 W celu zaadresowania segmentu pamieci pod adresem większym niż 1MB musimy aktywować linię A20, wiele współczesnych BIOS-ów potrafi to zrobić za pomocą odpowiedniego przerwania. Funkcja 24h przerwania 15h, w zależności od wartości przekazanej w rejestrze AL, może wykonywać następujące czynnośc: 
 \begin{itemize}
 \item{AL = 0 - deaktywacja linii A20}
-\item{AL = 1 -aktywacja linii A20}
-\item{AL = 2 -zwrócenie informacji o stanie linii A20}
+\item{AL = 1 - aktywacja linii A20}
+\item{AL = 2 - zwrócenie informacji o stanie linii A20}
 \item{AL = 3 - zwrócenie informacji o możliwości aktywacji linii A20 przez port 92h}
 \end{itemize}
 
@@ -232,7 +229,7 @@ W momencie przyjscia kolejnego przerwania jądro znów znajdzie się na linii 60
 
 \subsection{Przełączenie zadań z wykorzystaniem przerwań czasomierza systemowego}
 
-Podczas przełączania zadania procesor, następuje zmiana selektora w rejestrze segmentowym CS, zapamiętywany jest kontekst bieżącego zadania, a następnie odczytuje z TSS kontekst nowego zadania, zawierający selektor segmentu i offset, od którego należy rozpocząć jego realizację.  Następnie wykonywany jest rozkaz skoku odległego. W jądrze użyto jedynie globalnych deskryptorów, dlatego nie było problemu ze zmianamy poziomu uprzywilejowania deskryptorów. 
+Podczas przełączania zadania procesor, następuje zmiana selektora w rejestrze segmentowym CS, zapamiętywany jest kontekst bieżącego zadania, a następnie odczytywany jest TSS kontekst nowego zadania, zawierający selektor segmentu i offset, od którego należy rozpocząć jego realizację. Kolejny krok to rozkaz skoku odległego. W jądrze użyto jedynie globalnych deskryptorów, dlatego nie było problemu ze zmianamy poziomu uprzywilejowania deskryptorów. 
 
 	\section{Zakończenie}
 \subsection{Wnioski i możliwości dalszego rozwoju jądra}
